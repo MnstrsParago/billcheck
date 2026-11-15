@@ -8,7 +8,7 @@ import { getAllOutcomes, isOutcomesConfigured } from "@/lib/outcomes/store";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Hospital leaderboard — BillCheck",
+  title: "Which hospitals lower bills — BillCheck",
   description: "How often hospitals lower disputed charges, from anonymous BillCheck dispute outcomes.",
 };
 
@@ -54,12 +54,12 @@ export default async function HospitalsPage() {
   return (
     <div className="space-y-6">
       <header className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Hospital leaderboard</h1>
-        <p className="text-slate-600">How often hospitals lower disputed charges, based on anonymous outcomes shared by BillCheck users.</p>
+        <h1 className="text-3xl font-semibold tracking-tight sm:text-5xl">Which hospitals lower bills</h1>
+        <p className="text-lg text-slate-500">How often each hospital lowered a charge after a patient disputed it. Based on anonymous results from BillCheck users.</p>
       </header>
 
       {!data ? (
-        <div className="rounded-xl border border-slate-200 bg-white p-6 text-slate-600">
+        <div className="rounded-3xl bg-slate-50 p-6 text-slate-600">
           <p className="font-medium text-slate-900">Leaderboard is unavailable right now.</p>
           <p className="mt-1 text-sm">The shared outcomes database is not reachable. You can still check your bill and track your dispute.</p>
           <Link href="/" className="mt-4 inline-block text-sm font-medium text-emerald-700 hover:text-emerald-800">
@@ -74,7 +74,7 @@ export default async function HospitalsPage() {
           </p>
 
           {data.rankings.length === 0 ? (
-            <div className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-600">
+            <div className="rounded-3xl bg-slate-50 p-6 text-sm text-slate-600">
               No hospital has {MIN_RANKING_SAMPLE}+ closed disputed lines yet.
             </div>
           ) : (
@@ -82,7 +82,7 @@ export default async function HospitalsPage() {
               {/* Mobile: cards */}
               <ol className="space-y-3 md:hidden">
                 {data.rankings.map((r, i) => (
-                  <li key={r.hospitalKey} className="rounded-xl border border-slate-200 bg-white p-4">
+                  <li key={r.hospitalKey} className="rounded-3xl bg-slate-50 p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="font-medium text-slate-900">
@@ -97,16 +97,16 @@ export default async function HospitalsPage() {
                     </div>
                     <dl className="mt-3 grid grid-cols-2 gap-3 text-sm">
                       <div>
-                        <dt className="text-xs text-slate-500">Conceded</dt>
+                        <dt className="text-xs text-slate-500">Lowered</dt>
                         <dd className="font-semibold text-emerald-700">{pct(r.concededPct)}</dd>
                         <Bar pct={r.concededPct} />
                       </div>
                       <div>
-                        <dt className="text-xs text-slate-500">Median cut when lowered</dt>
+                        <dt className="text-xs text-slate-500">Usual cut</dt>
                         <dd className="font-semibold text-slate-900">{pct(r.medianReductionPct)}</dd>
                       </div>
                       <div className="col-span-2">
-                        <dt className="text-xs text-slate-500">Top winning argument</dt>
+                        <dt className="text-xs text-slate-500">Best reason</dt>
                         <dd className="text-slate-800">{argumentLabel(r.topArgument)}</dd>
                       </div>
                     </dl>
@@ -115,7 +115,7 @@ export default async function HospitalsPage() {
               </ol>
 
               {/* Desktop: table */}
-              <div className="hidden overflow-hidden rounded-xl border border-slate-200 bg-white md:block">
+              <div className="hidden overflow-hidden rounded-3xl bg-slate-50 md:block">
                 <table className="w-full text-left text-sm">
                   <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                     <tr>
@@ -123,9 +123,9 @@ export default async function HospitalsPage() {
                       <th className="px-4 py-3 font-medium">Hospital</th>
                       <th className="px-4 py-3 font-medium">State</th>
                       <th className="px-4 py-3 text-right font-medium">Disputes</th>
-                      <th className="px-4 py-3 font-medium">Conceded</th>
-                      <th className="px-4 py-3 text-right font-medium">Median cut when lowered</th>
-                      <th className="px-4 py-3 font-medium">Top winning argument</th>
+                      <th className="px-4 py-3 font-medium">Lowered</th>
+                      <th className="px-4 py-3 text-right font-medium">Usual cut</th>
+                      <th className="px-4 py-3 font-medium">Best reason</th>
                       <th className="px-4 py-3 font-medium">
                         <span className="sr-only">Data</span>
                       </th>
@@ -157,7 +157,7 @@ export default async function HospitalsPage() {
         </>
       )}
 
-      <section className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600 sm:p-6">
+      <section className="rounded-3xl bg-slate-50 p-4 text-sm text-slate-600 sm:p-6">
         <h2 className="font-semibold text-slate-900">Methodology</h2>
         <ul className="mt-2 list-disc space-y-1 pl-5">
           <li>
@@ -166,8 +166,8 @@ export default async function HospitalsPage() {
             service or free text are stored.
           </li>
           <li>
-            <strong>Conceded</strong> = share of disputed lines where the final price was lower than the original.{" "}
-            <strong>Median cut when lowered</strong> = median of (original − final) / original among the lines the
+            <strong>Lowered</strong> = share of disputed charges where the final price was lower than the original.{" "}
+            <strong>Usual cut</strong> = median of (original − final) / original among the lines the
             hospital actually lowered.
           </li>
           <li>Hospitals with fewer than {MIN_RANKING_SAMPLE} closed lines are not ranked. Ordering: conceded %, then median cut.</li>

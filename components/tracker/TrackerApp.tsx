@@ -25,7 +25,7 @@ export default function TrackerApp() {
 
   if (!pro) {
     return (
-      <div className="mx-auto max-w-md rounded-xl border border-slate-200 bg-white p-6 text-center">
+      <div className="mx-auto max-w-md rounded-3xl bg-slate-50 p-8 text-center">
         <h1 className="text-lg font-semibold text-slate-900">The dispute tracker is a Pro feature</h1>
         <p className="mt-2 text-sm text-slate-600">
           Pro tracks every dispute, reminds you at day 30 and day 60, and writes the follow-up and escalation letters.
@@ -46,7 +46,7 @@ export default function TrackerApp() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
-          <h1 className="text-xl font-semibold text-slate-900">Dispute tracker</h1>
+          <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">Your disputes</h1>
           <p className="text-sm text-slate-600">
             {disputes.length === 0
               ? "No disputes yet."
@@ -63,7 +63,7 @@ export default function TrackerApp() {
       <DemoClock />
 
       {disputes.length === 0 ? (
-        <div className="rounded-xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-600">
+        <div className="rounded-3xl bg-slate-50 p-8 text-center text-slate-600">
           Check a bill and send the dispute letter — it will show up here with reminders at day 30 and day 60.
           <div className="mt-3">
             <Link href="/" className="font-medium text-emerald-700 hover:underline">

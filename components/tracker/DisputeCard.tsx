@@ -143,15 +143,15 @@ export default function DisputeCard({ dispute: d, now }: { dispute: Dispute; now
   // Failed earlier (e.g. previous visit) or failed just now.
   const showRetry = closed && d.outcomeShared !== true && share !== "sharing";
 
-  const btn = "rounded-lg px-3 py-2 text-sm font-medium";
+  const btn = "rounded-full px-4 py-2 text-sm font-medium";
   const primary = `${btn} bg-emerald-600 text-white hover:bg-emerald-700`;
-  const secondary = `${btn} border border-slate-300 text-slate-700 hover:bg-slate-50`;
+  const secondary = `${btn} bg-slate-900/5 text-slate-800 hover:bg-slate-900/10`;
 
   return (
-    <article data-dispute-id={d.id} className="scroll-mt-20 space-y-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+    <article data-dispute-id={d.id} className="scroll-mt-20 space-y-5 rounded-3xl bg-slate-50 p-5 sm:p-7">
       <header className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
-          <h2 className="truncate text-base font-semibold text-slate-900">{d.provider}</h2>
+          <h2 className="truncate text-xl font-semibold tracking-tight text-slate-900">{d.provider}</h2>
           <p className="text-xs text-slate-500">
             {itemized ? "Itemized bill request · " : ""}Started {formatDate(d.startedAt)}
             {d.state ? ` · ${d.state}` : ""}
@@ -167,15 +167,15 @@ export default function DisputeCard({ dispute: d, now }: { dispute: Dispute; now
       </header>
 
       <dl className="grid grid-cols-3 gap-2 text-center">
-        <div className="rounded-lg bg-slate-50 p-2">
+        <div className="rounded-2xl bg-white p-3">
           <dt className="text-[11px] text-slate-500">Bill total</dt>
           <dd className="text-sm font-semibold text-slate-900">{usd(d.billTotal)}</dd>
         </div>
-        <div className="rounded-lg bg-slate-50 p-2">
+        <div className="rounded-2xl bg-white p-3">
           <dt className="text-[11px] text-slate-500">Disputed</dt>
           <dd className="text-sm font-semibold text-slate-900">{itemized ? "—" : usd(d.amountDisputed)}</dd>
         </div>
-        <div className="rounded-lg bg-emerald-50 p-2">
+        <div className="rounded-2xl bg-emerald-50 p-3">
           <dt className="text-[11px] text-slate-500">Saved</dt>
           <dd className="text-sm font-semibold text-emerald-700">
             {d.status === "resolved" && !itemized ? usd(d.savedAmount ?? 0) : "—"}
@@ -224,13 +224,13 @@ export default function DisputeCard({ dispute: d, now }: { dispute: Dispute; now
       </ol>
 
       {letter && (
-        <section data-tour="tracker-letter" className="scroll-mt-20 space-y-2 rounded-lg border border-amber-200 bg-amber-50/60 p-3">
+        <section data-tour="tracker-letter" className="scroll-mt-20 space-y-3 rounded-2xl bg-white p-4">
           <h3 className="text-sm font-semibold text-slate-900">{letter.title} — ready to send</h3>
           <textarea
             readOnly
             value={letter.text}
             rows={8}
-            className="block w-full resize-y rounded-md border border-slate-200 bg-white p-2 font-mono text-xs text-slate-800"
+            className="block w-full resize-y rounded-xl bg-slate-50 p-3 font-mono text-xs text-slate-800"
           />
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={() => copy(letter.text)} className={secondary}>
@@ -249,7 +249,7 @@ export default function DisputeCard({ dispute: d, now }: { dispute: Dispute; now
       )}
 
       {d.ppdr && ppdrText && !closed && (
-        <section className="space-y-2 rounded-lg border border-sky-200 bg-sky-50/60 p-3">
+        <section className="space-y-3 rounded-2xl bg-white p-4">
           <h3 className="text-sm font-semibold text-slate-900">
             Federal Good Faith Estimate dispute (No Surprises Act)
           </h3>
@@ -272,7 +272,7 @@ export default function DisputeCard({ dispute: d, now }: { dispute: Dispute; now
                 value={ppdrText}
                 rows={6}
                 aria-label="Federal dispute request text"
-                className="block w-full resize-y rounded-md border border-slate-200 bg-white p-2 font-mono text-xs text-slate-800"
+                className="block w-full resize-y rounded-xl bg-slate-50 p-3 font-mono text-xs text-slate-800"
               />
               <div className="flex flex-wrap gap-2">
                 <button type="button" onClick={() => copy(ppdrText)} className={secondary}>
@@ -323,7 +323,7 @@ export default function DisputeCard({ dispute: d, now }: { dispute: Dispute; now
         </p>
       )}
 
-      <footer className="flex flex-wrap gap-2 border-t border-slate-100 pt-3">
+      <footer className="flex flex-wrap gap-2 pt-1">
         {!closed && (
           <>
             <button type="button" onClick={() => downloadIcs(d)} className={secondary}>
