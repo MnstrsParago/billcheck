@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { MAX_UPLOAD_FILES, prepareUploads, type UploadFile } from "@/lib/upload";
+import { Landing } from "./Landing";
 import { SAMPLES } from "@/lib/samples";
 import type { HouseholdInput } from "@/lib/types";
 import { Button } from "@/components/ui/Button";
@@ -34,7 +36,106 @@ function Progress() {
   );
 }
 
+function UploadZone({
+  files,
+  disabled,
+  onFiles,
+}: {
+  files: UploadFile[];
+  disabled: boolean;
+  onFiles: (f: UploadFile[]) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [drag, setDrag] = useState(false);
+
+  const add = async (list: FileList | null) => {
+    if (!list || list.length === 0) return;
+    setError(null);
+    setBusy(true);
+    try {
+      onFiles(await prepareUploads(files, Array.from(list)));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not read that file.");
+    } finally {
+      setBusy(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <div
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDrag(true);
+        }}
+        onDragLeave={() => setDrag(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDrag(false);
+          if (!disabled) void add(e.dataTransfer.files);
+        }}
+        className={`flex flex-col items-center gap-2 rounded-xl border-2 border-dashed p-5 text-center transition ${
+          drag ? "border-emerald-500 bg-emerald-50" : "border-slate-300 bg-slate-50"
+        }`}
+      >
+        <p className="font-medium text-slate-800">Upload your itemized bill</p>
+        <p className="text-sm text-slate-500">PDF or photos of each page (JPEG/PNG), up to {MAX_UPLOAD_FILES} pages</p>
+        <input
+          ref={inputRef}
+          id="bill-files"
+          type="file"
+          accept="application/pdf,image/*"
+          multiple
+          className="sr-only"
+          disabled={disabled || busy}
+          onChange={(e) => void add(e.target.files)}
+        />
+        <label
+          htmlFor="bill-files"
+          className={`inline-flex cursor-pointer items-center rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 ${
+            disabled || busy ? "pointer-events-none opacity-50" : ""
+          }`}
+        >
+          {busy ? "Preparing…" : files.length ? "Add more pages" : "Choose PDF or photos"}
+        </label>
+      </div>
+      {error ? (
+        <p role="alert" className="text-sm text-rose-600">
+          {error}
+        </p>
+      ) : null}
+      {files.length ? (
+        <ul className="space-y-1">
+          {files.map((f, i) => (
+            <li key={`${f.name}-${i}`} className="flex items-center justify-between gap-2 rounded-lg bg-white px-3 py-2 text-sm ring-1 ring-slate-200">
+              <span className="min-w-0 truncate">
+                {f.mediaType === "application/pdf" ? "📄" : "🖼️"} {f.name}{" "}
+                <span className="text-slate-400">({f.sizeKb} KB)</span>
+              </span>
+              <button
+                type="button"
+                className="shrink-0 text-slate-500 hover:text-rose-600"
+                aria-label={`Remove ${f.name}`}
+                disabled={disabled}
+                onClick={() => onFiles(files.filter((_, j) => j !== i))}
+              >
+                ✕
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
+  );
+}
+
 export function InputStep({
+  files,
+  onFiles,
+  onTour,
   text,
   household,
   loading,
@@ -45,6 +146,9 @@ export function InputStep({
   onManual,
   onCancel,
 }: {
+  files: UploadFile[];
+  onFiles: (f: UploadFile[]) => void;
+  onTour?: () => void;
   text: string;
   household: HouseholdInput;
   loading: boolean;
@@ -59,18 +163,16 @@ export function InputStep({
   const tooLong = text.length > MAX_TEXT;
   return (
     <div className="space-y-6">
-      <section className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Is your hospital bill right?</h1>
-        <p className="max-w-2xl text-slate-600">
-          Paste your itemized bill. In about a minute BillCheck flags possible duplicate charges, prices far above the
-          Medicare reference, and whether you may qualify for charity care — then helps you dispute it.
-        </p>
-      </section>
+      <Landing onTour={loading ? undefined : onTour} />
 
-      <Card className="space-y-4">
+      <Card className="space-y-4" id="check-form">
+        <UploadZone files={files} disabled={loading} onFiles={onFiles} />
+        <div className="flex items-center gap-3 text-xs uppercase tracking-wide text-slate-400" aria-hidden>
+          <span className="h-px flex-1 bg-slate-200" /> or paste text <span className="h-px flex-1 bg-slate-200" />
+        </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <label htmlFor="bill-text" className="text-sm font-medium text-slate-700">
-            Paste your itemized bill
+            Paste the bill text
           </label>
           <div className="flex flex-wrap gap-2">
             {SAMPLES.map((s) => (
@@ -82,18 +184,20 @@ export function InputStep({
         </div>
         <textarea
           id="bill-text"
-          rows={12}
+          rows={files.length ? 4 : 10}
           className={`${inputClass} font-mono text-xs sm:text-sm`}
           placeholder={"Date | CPT | Description | Units | Charge\n03/14/2026 | 70450 | CT head without contrast | 1 | $1,980.00\n…"}
           value={text}
-          disabled={loading}
+          disabled={loading || files.length > 0}
           onChange={(e) => onText(e.target.value)}
           aria-describedby="bill-text-hint"
         />
         <p id="bill-text-hint" className={`text-xs ${tooLong ? "text-rose-600" : "text-slate-500"}`}>
           {tooLong
             ? `That's ${text.length.toLocaleString()} characters — please trim to ${MAX_TEXT.toLocaleString()} (just the line items are enough).`
-            : "Copy the text from your itemized statement (with dates, CPT codes and charges). Remove your name and account number if you like — we don't need them."}
+            : files.length
+              ? "Your uploaded pages will be read instead of this text. Remove the files to paste text."
+              : "Copy the text from your itemized statement (with dates, CPT codes and charges). Remove your name and account number if you like — we don't need them."}
         </p>
 
         <details className="group rounded-lg border border-slate-200 p-3" open={hasHousehold || undefined}>
@@ -116,7 +220,7 @@ export function InputStep({
           </div>
         ) : (
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <Button size="lg" onClick={onSubmit} disabled={!text.trim() || tooLong}>
+            <Button size="lg" onClick={onSubmit} disabled={files.length === 0 && (!text.trim() || tooLong)}>
               Check my bill
             </Button>
             <Button variant="ghost" onClick={onManual}>

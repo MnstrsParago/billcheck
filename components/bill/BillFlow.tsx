@@ -15,6 +15,7 @@ import {
   type Draft,
 } from "@/lib/state";
 import type { ExtractResponse } from "@/lib/types";
+import type { UploadFile } from "@/lib/upload";
 import { InputStep } from "./InputStep";
 import { LinesStep } from "./LinesStep";
 import { ResultStep } from "./ResultStep";
@@ -32,6 +33,7 @@ export function BillFlow() {
   const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [hydrated, setHydrated] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [files, setFiles] = useState<UploadFile[]>([]); // not persisted (too large for localStorage)
   const abortRef = useRef<AbortController | null>(null);
   const topRef = useRef<HTMLDivElement>(null);
 
@@ -58,12 +60,16 @@ export function BillFlow() {
   const loadSample = (id: "A" | "B") => {
     const s = SAMPLES.find((x) => x.id === id);
     if (!s) return;
+    setFiles([]);
     patch({ text: s.text, household: s.household ? { ...s.household } : { ...EMPTY_HOUSEHOLD } });
   };
 
   const extract = async () => {
     const text = draft.text.trim();
-    if (!text) return;
+    if (!text && files.length === 0) return;
+    const payload = files.length
+      ? { files: files.map((f) => ({ mediaType: f.mediaType, data: f.data })) }
+      : { text };
     abortRef.current?.abort();
     const ctrl = new AbortController();
     abortRef.current = ctrl;
@@ -76,7 +82,7 @@ export function BillFlow() {
       const res = await fetch("/api/extract", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify(payload),
         signal: ctrl.signal,
       });
       status = res.status;
@@ -108,7 +114,7 @@ export function BillFlow() {
         dropped,
         extractError:
           bill.lines.length === 0
-            ? "We didn't find any line items with charges in that text. Add them below by hand."
+            ? "We didn't find any line items with charges on that bill. Add them below by hand."
             : null,
         // New bill → take the provider/state printed on it; the user can edit both on the next screen.
         provider: bill.provider?.trim() || "",
@@ -141,6 +147,7 @@ export function BillFlow() {
 
   const newBill = () => {
     clearDraft();
+    setFiles([]);
     go(emptyDraft());
   };
 
@@ -155,6 +162,8 @@ export function BillFlow() {
         <div className="h-64 animate-pulse rounded-xl bg-slate-100" aria-hidden />
       ) : draft.step === "input" ? (
         <InputStep
+          files={files}
+          onFiles={setFiles}
           text={draft.text}
           household={draft.household}
           loading={loading}

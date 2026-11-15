@@ -17,7 +17,7 @@ export async function POST(req: Request) {
   try {
     body = await req.json();
   } catch {
-    return json({ ok: false, error: "Request body must be JSON: { text: string }" }, 400);
+    return json({ ok: false, error: "Request body must be JSON" }, 400);
   }
 
   const parsed = ExtractRequestSchema.safeParse(body);
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const raw = await extractWithClaude(parsed.data.text);
+    const raw = await extractWithClaude(parsed.data);
     const { bill, dropped } = normalizeBill(raw);
     return json({ ok: true, bill, dropped });
   } catch (err) {

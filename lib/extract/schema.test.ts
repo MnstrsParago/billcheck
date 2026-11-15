@@ -183,3 +183,21 @@ describe("titleCaseIfShouting", () => {
     expect(titleCaseIfShouting(null)).toBe(null);
   });
 });
+
+describe("ExtractRequestSchema files", () => {
+  const b64 = "QUJDREVGR0hJSktMTU5PUA==";
+  it("accepts PDF and image uploads", () => {
+    expect(ExtractRequestSchema.safeParse({ files: [{ mediaType: "application/pdf", data: b64 }] }).success).toBe(true);
+    expect(
+      ExtractRequestSchema.safeParse({ files: [{ mediaType: "image/jpeg", data: b64 }, { mediaType: "image/png", data: b64 }] }).success,
+    ).toBe(true);
+  });
+  it("rejects bad types, non-base64, too many and too large", () => {
+    expect(ExtractRequestSchema.safeParse({ files: [{ mediaType: "image/gif", data: b64 }] }).success).toBe(false);
+    expect(ExtractRequestSchema.safeParse({ files: [{ mediaType: "image/jpeg", data: "not base64 !!!!!!!" }] }).success).toBe(false);
+    expect(ExtractRequestSchema.safeParse({ files: Array(7).fill({ mediaType: "image/jpeg", data: b64 }) }).success).toBe(false);
+    expect(ExtractRequestSchema.safeParse({ files: [{ mediaType: "image/jpeg", data: "A".repeat(4_300_000) }] }).success).toBe(false);
+    expect(ExtractRequestSchema.safeParse({ files: [] }).success).toBe(false);
+    expect(ExtractRequestSchema.safeParse({ text: "x", files: [{ mediaType: "image/jpeg", data: b64 }] }).success).toBe(false);
+  });
+});

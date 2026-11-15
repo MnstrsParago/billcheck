@@ -3,14 +3,44 @@ import type { ExtractedBill, ExtractedLine } from "@/lib/types";
 
 export const MAX_TEXT_CHARS = 40_000;
 
-/** Request body for POST /api/extract. */
-export const ExtractRequestSchema = z.object({
+/** Uploads: up to 6 files, ~4.2M base64 chars in total (Vercel body limit is 4.5 MB). */
+export const MAX_FILES = 6;
+export const MAX_FILES_BASE64_CHARS = 4_200_000;
+export const UPLOAD_MEDIA_TYPES = ["application/pdf", "image/jpeg", "image/png", "image/webp"] as const;
+export type UploadMediaType = (typeof UPLOAD_MEDIA_TYPES)[number];
+
+const TextRequest = z.strictObject({
   text: z
     .string({ error: "Missing bill text" })
     .trim()
     .min(1, "Bill text is empty")
     .max(MAX_TEXT_CHARS, `Bill text is too long (max ${MAX_TEXT_CHARS.toLocaleString("en-US")} characters)`),
 });
+
+const FileSchema = z.strictObject({
+  mediaType: z.enum(UPLOAD_MEDIA_TYPES, { error: "Only PDF, JPEG, PNG or WebP files are supported" }),
+  data: z
+    .string()
+    .min(16, "File is empty")
+    .regex(/^[A-Za-z0-9+/]+={0,2}$/, "File data must be base64"),
+});
+
+const FilesRequest = z.strictObject({
+  files: z
+    .array(FileSchema)
+    .min(1, "No file uploaded")
+    .max(MAX_FILES, `Upload at most ${MAX_FILES} files`)
+    .refine((fs) => fs.reduce((n, f) => n + f.data.length, 0) <= MAX_FILES_BASE64_CHARS, {
+      message: "Files are too large (max about 3 MB in total). Try fewer pages or smaller photos.",
+    })
+    .refine((fs) => fs.filter((f) => f.mediaType === "application/pdf").length <= 1, {
+      message: "Upload one PDF at a time",
+    }),
+});
+
+/** Request body for POST /api/extract: either pasted text or uploaded PDF/photos. */
+export const ExtractRequestSchema = z.union([TextRequest, FilesRequest], { error: "Send bill text or a PDF/photo" });
+export type ExtractRequest = z.infer<typeof ExtractRequestSchema>;
 
 /**
  * Loose schema sent to Claude as the structured-output format.

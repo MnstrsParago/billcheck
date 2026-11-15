@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
-import { EXTRACT_SYSTEM_PROMPT, buildUserMessage } from "./prompt";
-import { LlmBillSchema, type LlmBill } from "./schema";
+import { EXTRACT_SYSTEM_PROMPT, FILE_USER_MESSAGE, buildUserMessage } from "./prompt";
+import { LlmBillSchema, type ExtractRequest, type LlmBill } from "./schema";
 
 export const EXTRACT_MODEL = "claude-opus-5-5";
 
@@ -28,7 +28,18 @@ export function isConfigured(): boolean {
 }
 
 /** Call Claude with structured outputs; returns the loosely-validated model output. */
-export async function extractWithClaude(billText: string): Promise<LlmBill> {
+export async function extractWithClaude(input: ExtractRequest): Promise<LlmBill> {
+  const content: Anthropic.Beta.BetaContentBlockParam[] | string =
+    "text" in input
+      ? buildUserMessage(input.text)
+      : [
+          ...input.files.map((f): Anthropic.Beta.BetaContentBlockParam =>
+            f.mediaType === "application/pdf"
+              ? { type: "document", source: { type: "base64", media_type: "application/pdf", data: f.data } }
+              : { type: "image", source: { type: "base64", media_type: f.mediaType, data: f.data } },
+          ),
+          { type: "text", text: FILE_USER_MESSAGE },
+        ];
   let msg;
   try {
     msg = await getClient().beta.messages.parse({
@@ -37,7 +48,7 @@ export async function extractWithClaude(billText: string): Promise<LlmBill> {
       betas: ["server-side-fallback-2026-07-01"],
       fallbacks: "default",
       system: EXTRACT_SYSTEM_PROMPT,
-      messages: [{ role: "user", content: buildUserMessage(billText) }],
+      messages: [{ role: "user", content }],
       output_config: { format: betaZodOutputFormat(LlmBillSchema), effort: "low" },
     });
   } catch (err) {
