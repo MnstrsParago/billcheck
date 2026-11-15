@@ -34,6 +34,7 @@ Prefer to click yourself? Press **Try a sample bill**, or upload your own PDF or
 - All checks are our own code, using official 2026 government data (see below). Nothing in the results is hardcoded.
 - Letters (dispute, follow-up, escalation, charity care, itemized bill request, No Surprises Act dispute) are filled from your bill.
 - Dispute tracker: statuses, day-30 and day-60 steps, calendar file (.ics). Saved in your browser.
+- Email reminders (Resend): “Remind me by email” in the tracker sends a confirmation right away and books the day-30 follow-up email with Resend's scheduled sending (no cron of our own). The day-60 email is booked once it is within Resend's 30-day limit. “Send me the follow-up email now” lets you see it immediately. Demo limit: the free sender `onboarding@resend.dev` only delivers to the project owner's address; other addresses get a clear message.
 - Shared outcomes database (Upstash Redis). When a dispute is closed, an anonymous result is saved: hospital, state, code, original price, final price, and the reason that worked. No names, no dates of service.
 
 **Demo:**
@@ -91,7 +92,8 @@ Medicare prices are a reference point, not a guarantee. BillCheck is not legal o
 - Anthropic Claude API, called only on the server (`/api/extract`). Output is checked with zod; bad lines are dropped and shown.
 - Upstash Redis for the shared results and rate limits.
 - Bill drafts, the tracker and the demo Pro switch live in the browser (`localStorage`).
-- 124 unit tests (Vitest) for the checks, letters, tracker, calendar file and database rules.
+- Resend for email reminders (scheduled sending).
+- 131 unit tests (Vitest) for the checks, letters, tracker, calendar file and database rules.
 
 ## Run it locally
 
@@ -102,5 +104,5 @@ npm run dev                  # http://localhost:3000
 npm test
 ```
 
-Server-only environment variables: `ANTHROPIC_API_KEY`, `KV_REST_API_URL`, `KV_REST_API_TOKEN`.
+Server-only environment variables: `ANTHROPIC_API_KEY`, `KV_REST_API_URL`, `KV_REST_API_TOKEN`, `RESEND_API_KEY`.
 Without them the app still works: you can type the charges yourself, and the shared results are hidden.

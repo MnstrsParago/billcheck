@@ -138,6 +138,8 @@ export type Dispute = {
   kind?: "dispute" | "itemized_request";
   /** Started during the Judge tour or from a sample bill: its outcome is saved as demo data, not as a real result. */
   demo?: boolean;
+  /** Email reminders (address stays in this browser and Resend only; never in our database). */
+  email?: EmailReminders;
   /** No Surprises Act: federal patient-provider dispute (PPDR) data, when the bill exceeds the GFE by $400+. */
   ppdr?: PpdrInfo;
 };
@@ -184,4 +186,12 @@ export type HospitalRanking = {
   medianReductionPct: number; // median among lines that were lowered (0 if none)
   topArgument: WinningArgument | null;
   demoCount: number;
+};
+
+export type EmailReminders = {
+  address: string;
+  confirmedAt: string;
+  followUp?: { id: string; at: string };
+  escalation?: { id: string; at: string };
+  lastSentNowAt?: string;
 };

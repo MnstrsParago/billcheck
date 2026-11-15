@@ -247,3 +247,7 @@ const getServerSnapshot = () => EMPTY;
 export function useDisputes(): Dispute[] {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
+
+export function setDisputeEmail(id: string, email: Dispute["email"]): Dispute | null {
+  return updateDispute(id, (d) => ({ ...d, email }));
+}

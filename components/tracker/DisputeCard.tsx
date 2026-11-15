@@ -31,6 +31,8 @@ import {
   type LineResolution,
 } from "@/lib/tracker/store";
 import ResolveForm from "./ResolveForm";
+import EmailReminders from "./EmailReminders";
+import { cancelScheduled } from "@/lib/email/client";
 
 const BADGE: Record<DisputeStatus, string> = {
   letter_sent: "bg-slate-100 text-slate-700 ring-slate-200",
@@ -130,6 +132,7 @@ export default function DisputeCard({ dispute: d, now }: { dispute: Dispute; now
     if (closing.current || isClosed(d)) return; // double click on Save
     closing.current = true;
     setResolving(false);
+    void cancelScheduled(d);
     void doShare(resolveDispute(d.id, r));
   }
 
@@ -137,11 +140,13 @@ export default function DisputeCard({ dispute: d, now }: { dispute: Dispute; now
     if (closing.current || isClosed(d)) return;
     if (!window.confirm("Close this dispute as escalated? Final prices will stay as billed.")) return;
     closing.current = true;
+    void cancelScheduled(d);
     void doShare(escalateDispute(d.id));
   }
 
   function onDelete() {
     if (!window.confirm(`Delete the dispute with ${d.provider}? This can't be undone.`)) return;
+    void cancelScheduled(d);
     deleteDispute(d.id);
   }
 
@@ -252,6 +257,8 @@ export default function DisputeCard({ dispute: d, now }: { dispute: Dispute; now
           </div>
         </section>
       )}
+
+      {!closed && !itemized && <EmailReminders dispute={d} />}
 
       {d.ppdr && ppdrText && !closed && (
         <section className="space-y-3 rounded-2xl bg-white p-4">
