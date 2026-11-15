@@ -60,7 +60,6 @@ export default function TrackerApp() {
         )}
       </div>
 
-      <DemoClock />
 
       {disputes.length === 0 ? (
         <div className="rounded-3xl bg-slate-50 p-8 text-center text-slate-600">
@@ -78,6 +77,14 @@ export default function TrackerApp() {
           ))}
         </div>
       )}
+      <details className="rounded-3xl bg-slate-50 p-5">
+        <summary className="cursor-pointer select-none text-sm font-medium text-slate-600">
+          Demo clock (for judges): skip ahead to see reminders
+        </summary>
+        <div className="mt-4">
+          <DemoClock />
+        </div>
+      </details>
     </div>
   );
 }

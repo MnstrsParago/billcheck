@@ -109,6 +109,14 @@ export function ResultStep({
   };
 
   const upgrade = () => setPro(true);
+  const [showNext, setShowNext] = useState(false);
+  const openNext = () => {
+    setShowNext(true);
+    requestAnimationFrame(() =>
+      document.getElementById("next-steps")?.scrollIntoView({ behavior: "smooth", block: "start" }),
+    );
+  };
+  const noCodes = lines.length > 0 && lineStatus.filter((x) => x.status === "no_cpt").length * 2 >= lines.length;
   const n = findings.length;
   const name = provider.trim();
   const fromWhom = name ? ` from ${name}` : "";
@@ -117,8 +125,11 @@ export function ResultStep({
     <div className="space-y-14 sm:space-y-20">
       <header>
         <div className="flex items-center justify-between gap-3">
-          <p className="flex min-w-0 items-center gap-2 text-base font-medium text-slate-500">
-            Your bill check <ProBadge />
+          <p className="flex min-w-0 items-center gap-2 whitespace-nowrap text-base font-medium text-slate-500">
+            Your bill check
+            <span className="hidden sm:inline-flex">
+              <ProBadge />
+            </span>
           </p>
           <div className="flex shrink-0 gap-1">
             <Button variant="ghost" size="sm" onClick={onEditLines}>
@@ -148,24 +159,12 @@ export function ResultStep({
             </p>
           </>
         )}
-      </header>
-
-      {lines.length > 0 && lineStatus.filter((x) => x.status === "no_cpt").length * 2 >= lines.length && (
-        <section className="space-y-4 rounded-3xl bg-amber-50 p-5 sm:p-7">
-          <h2 className="text-xl font-semibold tracking-tight text-slate-900">Your bill has no billing codes</h2>
-          <p className="text-slate-700">
-            Most charges have no code (like “70450”), so we could only look for charges billed twice — we can&apos;t compare
-            prices with Medicare. Ask the hospital for an itemized bill with codes. Here is a letter you can send:
+        {noCodes ? (
+          <p className="mt-3 text-base text-amber-800">
+            Your bill has no billing codes, so we could only look for charges billed twice. See “More ways to save” below.
           </p>
-          <LetterBox
-            id="itemized-request"
-            title="Request for an itemized bill"
-            description="Asks for every charge with its code, quantity and price."
-            text={buildItemizedRequest({ provider, billTotal })}
-            filename={letterFilename("itemized-request", provider)}
-          />
-        </section>
-      )}
+        ) : null}
+      </header>
 
       {n > 0 && (
         <section aria-labelledby="findings-title" data-tour="findings" className="scroll-mt-20 space-y-5">
@@ -188,7 +187,7 @@ export function ResultStep({
                       ? `${orig.description}${orig.cpt ? ` (code ${orig.cpt})` : ""} on ${orig.dateOfService ?? "the same date"}, ${formatUSD(orig.charge)}`
                       : undefined
                   }
-                  onUnlock={scrollToPaywall}
+                  onUnlock={openNext}
                 />
               );
             })}
@@ -196,13 +195,33 @@ export function ResultStep({
         </section>
       )}
 
-      {!pro ? (
-        <Paywall disputable={totalDisputable} onUpgrade={upgrade} />
+      {(n > 0 || ppdr) && !showNext ? (
+        <div className="flex justify-center">
+          <Button size="lg" data-tour="get-letter" className="w-full sm:w-auto" onClick={openNext}>
+            Get my dispute letter
+          </Button>
+        </div>
+      ) : null}
+
+      {!showNext ? null : !pro ? (
+        <div id="next-steps" className="scroll-mt-20">
+          <Paywall disputable={totalDisputable} onUpgrade={upgrade} />
+        </div>
       ) : (
-        <section aria-labelledby="pro-title" className="space-y-5">
+        <section id="next-steps" aria-labelledby="pro-title" className="scroll-mt-20 space-y-5">
           <h2 id="pro-title" className="flex flex-wrap items-center gap-3 text-3xl font-bold tracking-tight text-slate-900">
             Your next steps <ProBadge />
           </h2>
+
+          {disputeLetter && (
+            <LetterBox
+              id="dispute-letter"
+              title="Letter to the hospital"
+              description={`Lists the ${n} problem${n === 1 ? "" : "s"} with codes and amounts, and asks for a corrected bill and a pause on collections.`}
+              text={disputeLetter}
+              filename={letterFilename("dispute", provider)}
+            />
+          )}
 
           {(n > 0 || ppdr) && (
             <div className="flex flex-col gap-5 rounded-3xl bg-emerald-50 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-7">
@@ -224,16 +243,9 @@ export function ResultStep({
             </div>
           )}
 
-          {disputeLetter && (
-            <LetterBox
-              id="dispute-letter"
-              title="Letter to the hospital"
-              description={`Lists the ${n} problem${n === 1 ? "" : "s"} with codes and amounts, and asks for a corrected bill and a pause on collections.`}
-              text={disputeLetter}
-              filename={letterFilename("dispute", provider)}
-            />
-          )}
-
+          <details className="rounded-3xl bg-slate-50 p-5 sm:p-7">
+            <summary className="cursor-pointer select-none text-base font-semibold text-slate-900">More options</summary>
+            <div className="mt-5 space-y-5">
           {ppdrText && (
             <LetterBox
               id="ppdr-request"
@@ -265,20 +277,42 @@ export function ResultStep({
               Lock again
             </button>
           </p>
+            </div>
+          </details>
         </section>
       )}
 
-      <section aria-labelledby="more-title" className="space-y-5">
-        <div>
-          <h2 id="more-title" className="text-3xl font-bold tracking-tight text-slate-900">
-            More ways to save
-          </h2>
-          <p className="mt-2 text-base text-slate-600">These can lower your bill even if every charge is correct.</p>
-        </div>
+      <details className="group rounded-3xl bg-slate-50 p-5 sm:p-7">
+        <summary className="cursor-pointer select-none list-none">
+          <span className="text-xl font-semibold tracking-tight text-slate-900">More ways to save</span>
+          <span className="mt-1 block text-base text-slate-600">
+            Free or cheaper care, a price estimate you were given, a bill with no codes.
+          </span>
+        </summary>
+        <div className="mt-6 space-y-5">
+      {lines.length > 0 && lineStatus.filter((x) => x.status === "no_cpt").length * 2 >= lines.length && (
+        <section className="space-y-4 rounded-3xl bg-white p-5 sm:p-7">
+          <h2 className="text-xl font-semibold tracking-tight text-slate-900">Your bill has no billing codes</h2>
+          <p className="text-slate-700">
+            Most charges have no code (like “70450”), so we could only look for charges billed twice — we can&apos;t compare
+            prices with Medicare. Ask the hospital for an itemized bill with codes. Here is a letter you can send:
+          </p>
+          <LetterBox
+            id="itemized-request"
+            title="Request for an itemized bill"
+            description="Asks for every charge with its code, quantity and price."
+            text={buildItemizedRequest({ provider, billTotal })}
+            filename={letterFilename("itemized-request", provider)}
+          />
+        </section>
+      )}
+
+
         <CharityCard charity={charity} household={household} onHousehold={onHousehold} />
         <GfeCard gfe={gfe} input={gfeInput} onInput={onGfe} />
         <CoverageNote lineStatus={lineStatus} lines={lines} />
-      </section>
+        </div>
+      </details>
     </div>
   );
 }

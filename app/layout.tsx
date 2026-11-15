@@ -18,7 +18,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className="min-h-screen bg-white text-slate-900 antialiased">
         <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-xl">
-          <nav aria-label="Main" className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3.5 sm:px-5">
+          <nav
+            aria-label="Main"
+            className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-3 sm:flex-nowrap sm:px-5 sm:py-3.5"
+          >
             <div className="flex items-center gap-2">
               <Link href="/" className="text-lg font-semibold tracking-tight">
                 Bill<span className="text-emerald-600">Check</span>
@@ -27,11 +30,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <ProBadge />
               </span>
             </div>
-            <div className="flex items-center gap-2.5 text-[13px] text-slate-500 sm:gap-5 sm:text-sm">
+            <div className="sm:order-last">
               <TourLink />
-              <Link href="/" className="hidden hover:text-slate-900 sm:inline">Check</Link>
-              <Link href="/tracker" className="hover:text-slate-900">Tracker</Link>
-              <Link href="/hospitals" className="hover:text-slate-900">Hospitals</Link>
+            </div>
+            <div className="flex w-full items-center justify-between text-sm text-slate-500 sm:w-auto sm:justify-end sm:gap-6">
+              <Link href="/" className="hover:text-slate-900">Check a bill</Link>
+              <Link href="/tracker" className="hover:text-slate-900">My disputes</Link>
+              <Link href="/hospitals" className="hover:text-slate-900">Hospital ratings</Link>
             </div>
           </nav>
         </header>

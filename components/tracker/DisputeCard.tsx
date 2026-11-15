@@ -157,6 +157,16 @@ export default function DisputeCard({ dispute: d, now }: { dispute: Dispute; now
   const primary = `${btn} bg-emerald-600 text-white hover:bg-emerald-700`;
   const secondary = `${btn} bg-slate-900/5 text-slate-800 hover:bg-slate-900/10`;
 
+  const nextLine = closed
+    ? itemized
+      ? "The itemized bill arrived. Check it for errors next."
+      : d.status === "resolved"
+        ? `Done. You saved ${usd(d.savedAmount ?? 0)}.`
+        : "Closed as escalated."
+    : step
+      ? `${step.label} — ${formatDate(step.dueDate)}`
+      : "Waiting for the hospital's answer.";
+
   return (
     <article data-dispute-id={d.id} className="scroll-mt-20 space-y-5 rounded-3xl bg-slate-50 p-5 sm:p-7">
       <header className="flex flex-wrap items-start justify-between gap-2">
@@ -176,6 +186,78 @@ export default function DisputeCard({ dispute: d, now }: { dispute: Dispute; now
         </span>
       </header>
 
+
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{closed ? "Result" : "Next step"}</p>
+        <p className="mt-1 text-lg font-medium text-slate-900">{nextLine}</p>
+      </div>
+
+      {letter && (
+        <section data-tour="tracker-letter" className="scroll-mt-20 space-y-3 rounded-2xl bg-white p-4">
+          <h3 className="text-sm font-semibold text-slate-900">{letter.title} — ready to send</h3>
+          <textarea
+            readOnly
+            value={letter.text}
+            rows={8}
+            className="block w-full resize-y rounded-xl bg-slate-50 p-3 font-mono text-xs text-slate-800"
+          />
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={() => copy(letter.text)} className={secondary}>
+              {copied ? "Copied" : "Copy letter"}
+            </button>
+            <button type="button" onClick={() => downloadText(letter.file, letter.text)} className={secondary}>
+              Download .txt
+            </button>
+            {d.status === "follow_up_due" && (
+              <button type="button" onClick={() => markFollowUpSent(d.id)} className={secondary}>
+                I sent it
+              </button>
+            )}
+          </div>
+        </section>
+      )}
+
+      {resolving && !closed && (
+        <ResolveForm dispute={d} onSubmit={onResolve} onCancel={() => setResolving(false)} />
+      )}
+
+      {!closed && !resolving && (
+        <div>
+          {itemized ? (
+            <button type="button" onClick={() => markItemizedReceived(d.id)} className={"rounded-full bg-emerald-600 px-7 py-3.5 text-base font-semibold text-white hover:bg-emerald-700 w-full sm:w-auto"}>
+              I got the itemized bill
+            </button>
+          ) : (
+            <button type="button" data-tour="resolve" onClick={() => setResolving(true)} className={"rounded-full bg-emerald-600 px-7 py-3.5 text-base font-semibold text-white hover:bg-emerald-700 w-full sm:w-auto"}>
+              Record the result
+            </button>
+          )}
+        </div>
+      )}
+
+      {closed && itemized && (
+        <a href="/" className="inline-block text-sm font-medium text-emerald-700 hover:underline">
+          Check the itemized bill now →
+        </a>
+      )}
+
+      {closed && share === "sharing" && <p className="text-xs text-slate-500">Sharing anonymous result…</p>}
+      {showRetry && (
+        <p className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
+          Couldn&apos;t share anonymously.
+          <button
+            type="button"
+            onClick={() => void doShare(d)}
+            className="rounded border border-slate-300 px-2 py-0.5 font-medium text-slate-700 hover:bg-slate-50"
+          >
+            Retry
+          </button>
+        </p>
+      )}
+
+      <details className="group rounded-2xl bg-white/60 p-4">
+        <summary className="cursor-pointer select-none text-sm font-medium text-slate-600">Details</summary>
+        <div className="mt-4 space-y-5">
       <dl className="grid grid-cols-3 gap-2 text-center">
         <div className="rounded-2xl bg-white p-3">
           <dt className="text-[11px] text-slate-500">Bill total</dt>
@@ -233,32 +315,7 @@ export default function DisputeCard({ dispute: d, now }: { dispute: Dispute; now
         )}
       </ol>
 
-      {letter && (
-        <section data-tour="tracker-letter" className="scroll-mt-20 space-y-3 rounded-2xl bg-white p-4">
-          <h3 className="text-sm font-semibold text-slate-900">{letter.title} — ready to send</h3>
-          <textarea
-            readOnly
-            value={letter.text}
-            rows={8}
-            className="block w-full resize-y rounded-xl bg-slate-50 p-3 font-mono text-xs text-slate-800"
-          />
-          <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={() => copy(letter.text)} className={secondary}>
-              {copied ? "Copied" : "Copy letter"}
-            </button>
-            <button type="button" onClick={() => downloadText(letter.file, letter.text)} className={secondary}>
-              Download .txt
-            </button>
-            {d.status === "follow_up_due" && (
-              <button type="button" onClick={() => markFollowUpSent(d.id)} className={primary}>
-                Mark follow-up sent
-              </button>
-            )}
-          </div>
-        </section>
-      )}
-
-      {!closed && !itemized && <EmailReminders dispute={d} />}
+          {!closed && !itemized && <EmailReminders dispute={d} />}
 
       {d.ppdr && ppdrText && !closed && (
         <section className="space-y-3 rounded-2xl bg-white p-4">
@@ -311,58 +368,23 @@ export default function DisputeCard({ dispute: d, now }: { dispute: Dispute; now
         </section>
       )}
 
-      {resolving && !closed && (
-        <ResolveForm dispute={d} onSubmit={onResolve} onCancel={() => setResolving(false)} />
-      )}
-
-      {closed && itemized && (
-        <a href="/" className="inline-block text-sm font-medium text-emerald-700 hover:underline">
-          Check the itemized bill now →
-        </a>
-      )}
-
-      {closed && share === "sharing" && <p className="text-xs text-slate-500">Sharing anonymous result…</p>}
-      {showRetry && (
-        <p className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
-          Couldn&apos;t share anonymously.
-          <button
-            type="button"
-            onClick={() => void doShare(d)}
-            className="rounded border border-slate-300 px-2 py-0.5 font-medium text-slate-700 hover:bg-slate-50"
-          >
-            Retry
-          </button>
-        </p>
-      )}
-
-      <footer className="flex flex-wrap gap-2 pt-1">
-        {!closed && (
-          <>
-            <button type="button" onClick={() => downloadIcs(d)} className={secondary}>
-              Add to calendar
-            </button>
-            {itemized ? (
-              <button type="button" onClick={() => markItemizedReceived(d.id)} className={primary}>
-                Itemized bill received
+          <div className="flex flex-wrap gap-2">
+            {!closed && (
+              <button type="button" onClick={() => downloadIcs(d)} className={secondary}>
+                Add to calendar (.ics)
               </button>
-            ) : (
-              <>
-                {!resolving && (
-                  <button type="button" data-tour="resolve" onClick={() => setResolving(true)} className={primary}>
-                    Resolve
-                  </button>
-                )}
-                <button type="button" onClick={onEscalate} className={secondary}>
-                  Escalate
-                </button>
-              </>
             )}
-          </>
-        )}
-        <button type="button" onClick={onDelete} className={`${btn} ml-auto text-rose-600 hover:bg-rose-50`}>
-          Delete
-        </button>
-      </footer>
+            {!closed && !itemized && (
+              <button type="button" onClick={onEscalate} className={secondary}>
+                Close as escalated
+              </button>
+            )}
+            <button type="button" onClick={onDelete} className={`${btn} ml-auto text-rose-600 hover:bg-rose-50`}>
+              Delete
+            </button>
+          </div>
+        </div>
+      </details>
     </article>
   );
 }

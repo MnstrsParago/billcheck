@@ -154,7 +154,9 @@ const STEPS: Step[] = [
         .join(" ") || "We checked every charge against Medicare prices and looked for charges billed twice.",
     cta: "See how to fix it",
     run: async () => {
-      $('[data-tour="upgrade"]')?.click();
+      $('[data-tour="get-letter"]')?.click();
+      (await waitFor('[data-tour="upgrade"], [data-tour="dispute-letter"]')).dataset.tour === "upgrade" &&
+        $('[data-tour="upgrade"]')?.click();
       scrollTo(await waitFor('[data-tour="dispute-letter"]'));
     },
   },

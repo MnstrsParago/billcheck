@@ -41,7 +41,7 @@ export function NextActionBanner() {
           <span className="text-slate-700">
             Saved so far: <span className="font-semibold text-emerald-700">{usd(saved)}</span>
           </span>
-          <span className="font-medium text-emerald-700">Open tracker →</span>
+          <span className="font-medium text-emerald-700">My disputes →</span>
         </div>
       </div>
     </Link>
