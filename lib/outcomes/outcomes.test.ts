@@ -72,7 +72,8 @@ describe("aggregate", () => {
       hospitalKey: "a hospital",
       cpt: "99213",
       count: 3,
-      medianReductionPct: 40,
+      reducedCount: 2,
+      medianReductionPct: 45,
       topArgument: "above_medicare",
       demoCount: 1,
     });

@@ -20,6 +20,13 @@ export function reductionPct(originalPrice: number, finalPrice: number): number 
 
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
+const isReduced = (r: OutcomeRecord) => r.finalPrice < r.originalPrice;
+
+/** Median % reduction among lines that were actually lowered (0 if none were). */
+export function medianReductionWhenLowered(records: OutcomeRecord[]): number {
+  return round1(median(records.filter(isReduced).map((r) => reductionPct(r.originalPrice, r.finalPrice))));
+}
+
 const ARG_ORDER: WinningArgument[] = ["above_medicare", "duplicate", "charity_care"];
 
 /** Most frequent argument among lines that actually got a reduction (ties: fixed order). */
@@ -75,7 +82,8 @@ export function codeStats(records: OutcomeRecord[], hospitalKey: string, cpts: s
       hospitalKey: key,
       cpt,
       count: list.length,
-      medianReductionPct: round1(median(list.map((r) => reductionPct(r.originalPrice, r.finalPrice)))),
+      reducedCount: list.filter(isReduced).length,
+      medianReductionPct: medianReductionWhenLowered(list),
       topArgument: topArgument(list),
       demoCount: list.filter((r) => r.demo).length,
     });
@@ -102,7 +110,7 @@ export function rankHospitals(records: OutcomeRecord[], minSample = MIN_RANKING_
       state: mostFrequent(list.map((r) => r.state).filter((s): s is string => !!s)),
       disputes: list.length,
       concededPct: round1((conceded / list.length) * 100),
-      medianReductionPct: round1(median(list.map((r) => reductionPct(r.originalPrice, r.finalPrice)))),
+      medianReductionPct: medianReductionWhenLowered(list),
       topArgument: topArgument(list),
       demoCount: list.filter((r) => r.demo).length,
     });

@@ -168,7 +168,7 @@ export function normalizeBill(raw: unknown): NormalizedBill {
 
   return {
     bill: {
-      provider: normalizeText(r.provider, 200),
+      provider: titleCaseIfShouting(normalizeText(r.provider, 200)),
       providerState: normalizeState(r.providerState),
       patientBalance: normalizeMoney(r.patientBalance),
       totalCharges: normalizeMoney(r.totalCharges),
@@ -176,4 +176,16 @@ export function normalizeBill(raw: unknown): NormalizedBill {
     },
     dropped,
   };
+}
+
+const SMALL_WORDS = new Set(["of", "and", "the", "at", "in", "for", "on"]);
+
+/** "RIVERSIDE GENERAL HOSPITAL" -> "Riverside General Hospital". Mixed-case names are kept as printed. */
+export function titleCaseIfShouting(name: string | null): string | null {
+  if (!name || name !== name.toUpperCase() || !/[A-Z]/.test(name)) return name;
+  return name
+    .toLowerCase()
+    .split(" ")
+    .map((w, i) => (i > 0 && SMALL_WORDS.has(w) ? w : w.replace(/(^|[-.(])([a-z])/g, (_, p, c) => p + c.toUpperCase())))
+    .join(" ");
 }

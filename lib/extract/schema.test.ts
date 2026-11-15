@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  titleCaseIfShouting,
   ExtractRequestSchema,
   MAX_TEXT_CHARS,
   normalizeBill,
@@ -171,5 +172,14 @@ describe("buildUserMessage", () => {
     expect(m.match(/<bill_text>/g)).toHaveLength(1);
     expect(m.match(/<\/bill_text>/g)).toHaveLength(1);
     expect(m.trim().endsWith("</bill_text>")).toBe(true);
+  });
+});
+
+describe("titleCaseIfShouting", () => {
+  it("title-cases all-caps names and keeps mixed case", () => {
+    expect(titleCaseIfShouting("RIVERSIDE GENERAL HOSPITAL")).toBe("Riverside General Hospital");
+    expect(titleCaseIfShouting("ST. MARY'S CENTER OF HOPE")).toBe("St. Mary's Center of Hope");
+    expect(titleCaseIfShouting("McLaren Health")).toBe("McLaren Health");
+    expect(titleCaseIfShouting(null)).toBe(null);
   });
 });

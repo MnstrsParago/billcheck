@@ -142,7 +142,8 @@ export type CodeOutcomeStats = {
   hospitalKey: string;
   cpt: string;
   count: number; // number of disputes for this code at this hospital
-  medianReductionPct: number; // 0..100
+  reducedCount: number; // how many of them got a lower final price
+  medianReductionPct: number; // 0..100, median among lines that were lowered (0 if none)
   topArgument: WinningArgument | null;
   demoCount: number;
 };
@@ -153,7 +154,7 @@ export type HospitalRanking = {
   state: string | null;
   disputes: number; // distinct closed disputed lines
   concededPct: number; // share of lines with finalPrice < originalPrice, 0..100
-  medianReductionPct: number;
+  medianReductionPct: number; // median among lines that were lowered (0 if none)
   topArgument: WinningArgument | null;
   demoCount: number;
 };

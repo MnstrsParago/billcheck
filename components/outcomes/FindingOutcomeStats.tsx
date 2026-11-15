@@ -52,9 +52,16 @@ export function FindingOutcomeStats({ hospital, cpt, stats }: Props) {
   return (
     <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
       <span>
-        At this hospital, {people} disputed this code, median reduction{" "}
-        <strong className="font-semibold">{Math.round(s.medianReductionPct)}%</strong>
-        {s.topArgument ? <>, winning argument: {argumentLabel(s.topArgument)}</> : null}.
+        At this hospital, {people} disputed this code
+        {s.reducedCount > 0 ? (
+          <>
+            ; {s.reducedCount} got it lowered, median reduction{" "}
+            <strong className="font-semibold">{Math.round(s.medianReductionPct)}%</strong>
+            {s.topArgument ? <>, winning argument: {argumentLabel(s.topArgument)}</> : null}.
+          </>
+        ) : (
+          <>; none got it lowered yet.</>
+        )}
       </span>
       {s.demoCount > 0 ? (
         <span

@@ -102,7 +102,7 @@ export default async function HospitalsPage() {
                         <Bar pct={r.concededPct} />
                       </div>
                       <div>
-                        <dt className="text-xs text-slate-500">Median reduction</dt>
+                        <dt className="text-xs text-slate-500">Median cut when lowered</dt>
                         <dd className="font-semibold text-slate-900">{pct(r.medianReductionPct)}</dd>
                       </div>
                       <div className="col-span-2">
@@ -124,7 +124,7 @@ export default async function HospitalsPage() {
                       <th className="px-4 py-3 font-medium">State</th>
                       <th className="px-4 py-3 text-right font-medium">Disputes</th>
                       <th className="px-4 py-3 font-medium">Conceded</th>
-                      <th className="px-4 py-3 text-right font-medium">Median reduction</th>
+                      <th className="px-4 py-3 text-right font-medium">Median cut when lowered</th>
                       <th className="px-4 py-3 font-medium">Top winning argument</th>
                       <th className="px-4 py-3 font-medium">
                         <span className="sr-only">Data</span>
@@ -167,10 +167,10 @@ export default async function HospitalsPage() {
           </li>
           <li>
             <strong>Conceded</strong> = share of disputed lines where the final price was lower than the original.{" "}
-            <strong>Median reduction</strong> = median of (original − final) / original across all lines, escalated lines
-            counting as 0%.
+            <strong>Median cut when lowered</strong> = median of (original − final) / original among the lines the
+            hospital actually lowered.
           </li>
-          <li>Hospitals with fewer than {MIN_RANKING_SAMPLE} closed lines are not ranked. Ordering: conceded %, then median reduction.</li>
+          <li>Hospitals with fewer than {MIN_RANKING_SAMPLE} closed lines are not ranked. Ordering: conceded %, then median cut.</li>
           <li>
             Rows marked <em>demo</em> are a synthetic sample for fictional hospitals, shown so the leaderboard is not empty.
             They are not real outcomes.
