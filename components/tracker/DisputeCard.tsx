@@ -113,7 +113,7 @@ export default function DisputeCard({ dispute: d, now }: { dispute: Dispute; now
   const secondary = `${btn} border border-slate-300 text-slate-700 hover:bg-slate-50`;
 
   return (
-    <article className="space-y-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+    <article data-dispute-id={d.id} className="scroll-mt-20 space-y-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <header className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <h2 className="truncate text-base font-semibold text-slate-900">{d.provider}</h2>
@@ -185,7 +185,7 @@ export default function DisputeCard({ dispute: d, now }: { dispute: Dispute; now
       </ol>
 
       {letter && (
-        <section className="space-y-2 rounded-lg border border-amber-200 bg-amber-50/60 p-3">
+        <section data-tour="tracker-letter" className="scroll-mt-20 space-y-2 rounded-lg border border-amber-200 bg-amber-50/60 p-3">
           <h3 className="text-sm font-semibold text-slate-900">{letter.title} — ready to send</h3>
           <textarea
             readOnly
@@ -234,7 +234,7 @@ export default function DisputeCard({ dispute: d, now }: { dispute: Dispute; now
               Add to calendar
             </button>
             {!resolving && (
-              <button type="button" onClick={() => setResolving(true)} className={primary}>
+              <button type="button" data-tour="resolve" onClick={() => setResolving(true)} className={primary}>
                 Resolve
               </button>
             )}

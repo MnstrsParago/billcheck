@@ -66,7 +66,7 @@ export function LinesStep({
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
         <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">Review the bill lines</h1>
-        <Button variant="ghost" size="sm" onClick={onBack}>
+        <Button variant="ghost" size="sm" data-tour="back" onClick={onBack}>
           ← Back
         </Button>
       </div>
@@ -223,7 +223,7 @@ export function LinesStep({
               </span>
             )}
           </p>
-          <Button size="lg" onClick={run}>
+          <Button size="lg" data-tour="run-audit" onClick={run}>
             Run audit
           </Button>
         </div>

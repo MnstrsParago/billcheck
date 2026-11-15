@@ -34,7 +34,7 @@ export function Paywall({ disputable, onUpgrade }: { disputable: number; onUpgra
         ))}
       </ul>
       <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-        <Button size="lg" onClick={onUpgrade} aria-describedby="demo-note">
+        <Button size="lg" data-tour="upgrade" onClick={onUpgrade} aria-describedby="demo-note">
           Upgrade — $12/mo
         </Button>
         <span

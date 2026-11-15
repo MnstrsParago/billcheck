@@ -16,6 +16,7 @@ import {
 } from "@/lib/state";
 import type { ExtractResponse } from "@/lib/types";
 import type { UploadFile } from "@/lib/upload";
+import { TOUR_START_EVENT } from "@/components/tour/JudgeTour";
 import { InputStep } from "./InputStep";
 import { LinesStep } from "./LinesStep";
 import { ResultStep } from "./ResultStep";
@@ -164,6 +165,7 @@ export function BillFlow() {
         <InputStep
           files={files}
           onFiles={setFiles}
+          onTour={() => window.dispatchEvent(new Event(TOUR_START_EVENT))}
           text={draft.text}
           household={draft.household}
           loading={loading}

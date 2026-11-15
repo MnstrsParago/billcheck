@@ -92,7 +92,7 @@ export function ResultStep({
           <Button variant="secondary" size="sm" onClick={onEditLines}>
             Edit lines
           </Button>
-          <Button variant="ghost" size="sm" onClick={onNewBill}>
+          <Button variant="ghost" size="sm" data-tour="new-bill" onClick={onNewBill}>
             New bill
           </Button>
         </div>
@@ -127,7 +127,7 @@ export function ResultStep({
       </Card>
 
       {n > 0 && (
-        <section aria-labelledby="findings-title" className="space-y-3">
+        <section aria-labelledby="findings-title" data-tour="findings" className="scroll-mt-20 space-y-3">
           <h2 id="findings-title" className="text-base font-semibold">
             What we found
           </h2>
@@ -184,7 +184,7 @@ export function ResultStep({
                   </p>
                 )}
               </div>
-              <Button size="lg" onClick={startDispute}>
+              <Button size="lg" data-tour="start-dispute" onClick={startDispute}>
                 Start dispute →
               </Button>
             </Card>

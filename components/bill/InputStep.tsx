@@ -165,7 +165,7 @@ export function InputStep({
     <div className="space-y-6">
       <Landing onTour={loading ? undefined : onTour} />
 
-      <Card className="space-y-4" id="check-form">
+      <Card className="scroll-mt-20 space-y-4" id="check-form">
         <UploadZone files={files} disabled={loading} onFiles={onFiles} />
         <div className="flex items-center gap-3 text-xs uppercase tracking-wide text-slate-400" aria-hidden>
           <span className="h-px flex-1 bg-slate-200" /> or paste text <span className="h-px flex-1 bg-slate-200" />
@@ -176,7 +176,7 @@ export function InputStep({
           </label>
           <div className="flex flex-wrap gap-2">
             {SAMPLES.map((s) => (
-              <Button key={s.id} variant="secondary" size="sm" disabled={loading} onClick={() => onSample(s.id)} title={s.label}>
+              <Button key={s.id} variant="secondary" size="sm" disabled={loading} onClick={() => onSample(s.id)} title={s.label} data-tour={`sample-${s.id}`}>
                 Try Sample {s.id} ({s.id === "A" ? "ER visit" : "outpatient"})
               </Button>
             ))}
@@ -220,7 +220,7 @@ export function InputStep({
           </div>
         ) : (
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <Button size="lg" onClick={onSubmit} disabled={files.length === 0 && (!text.trim() || tooLong)}>
+            <Button size="lg" data-tour="check" onClick={onSubmit} disabled={files.length === 0 && (!text.trim() || tooLong)}>
               Check my bill
             </Button>
             <Button variant="ghost" onClick={onManual}>

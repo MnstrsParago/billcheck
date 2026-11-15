@@ -18,6 +18,7 @@ export default function DemoClock() {
       <div className="flex gap-2">
         <button
           type="button"
+          data-tour="simulate"
           onClick={() => simulateDays(30)}
           className="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700 sm:flex-none"
         >

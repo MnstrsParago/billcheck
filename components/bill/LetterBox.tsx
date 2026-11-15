@@ -64,7 +64,7 @@ export function LetterBox({
     setTimeout(() => setCopied("idle"), 2000);
   };
   return (
-    <section aria-labelledby={`${id}-title`} className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
+    <section aria-labelledby={`${id}-title`} data-tour={id} className="scroll-mt-20 rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h3 id={`${id}-title`} className="font-semibold text-slate-900">

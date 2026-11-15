@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { ProBadge } from "@/components/ui/ProBadge";
+import { JudgeTour } from "@/components/tour/JudgeTour";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -31,6 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </nav>
         </header>
         <main className="mx-auto max-w-5xl px-4 py-6 sm:py-10">{children}</main>
+        <JudgeTour />
         <footer className="mx-auto max-w-5xl px-4 pb-10 text-xs text-slate-500">
           BillCheck is not legal or medical advice. Reference prices: CMS Medicare Physician Fee Schedule CY2026
           (RVU26D). Income thresholds: HHS 2026 Poverty Guidelines.

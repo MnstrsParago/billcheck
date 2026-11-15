@@ -34,6 +34,12 @@ export function Landing({ onTour }: { onTour?: () => void }) {
           walks you through the dispute until the bill is fixed.
         </p>
         <div className="flex flex-wrap items-center gap-3">
+          <a
+            href="#check-form"
+            className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700"
+          >
+            Check your bill ↓
+          </a>
           <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
             <strong className="text-lg font-semibold">{usd0(average)}</strong> found on average on our {count} sample
             bills

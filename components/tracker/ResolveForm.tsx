@@ -104,6 +104,7 @@ export default function ResolveForm({
       <div className="flex gap-2">
         <button
           type="submit"
+          data-tour="save-resolved"
           disabled={hasError}
           className="flex-1 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none"
         >
