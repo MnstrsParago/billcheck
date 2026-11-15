@@ -1,0 +1,438 @@
+{
+  "source": "CMS Medicare Physician Fee Schedule, National Physician Fee Schedule Relative Value File, CY2026, October release (RVU26D, released 08/26/2026), file PPRRVU2026_Oct_nonQPP.csv",
+  "sourceUrl": "https://www.cms.gov/files/zip/rvu26d-updated-08-26-2026.zip",
+  "year": 2026,
+  "setting": "non-facility",
+  "geography": "national (unadjusted, no GPCI)",
+  "conversionFactor": 33.4009,
+  "conversionFactorQPP": 33.5675,
+  "formula": "nationalNonFacilityRate = NON-FACILITY TOTAL RVU x CONV FACTOR (non-QPP). Professional/global component only; lab codes (status X, Clinical Lab Fee Schedule) and codes with non-facility NA are excluded. OPPS cap (OPPSCAP) is locality-specific and NOT applied; oppsCapMayApply marks codes listed in OPPSCAP_Oct.csv.",
+  "rates": [
+    {
+      "cpt": "99202",
+      "description": "Office o/p new sf 15 min",
+      "nonFacilityTotalRvu": 2.25,
+      "nationalNonFacilityRate": 75.15,
+      "nationalNonFacilityRateQPP": 75.53,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "99203",
+      "description": "Office o/p new low 30 min",
+      "nonFacilityTotalRvu": 3.52,
+      "nationalNonFacilityRate": 117.57,
+      "nationalNonFacilityRateQPP": 118.16,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "99204",
+      "description": "Office o/p new mod 45 min",
+      "nonFacilityTotalRvu": 5.31,
+      "nationalNonFacilityRate": 177.36,
+      "nationalNonFacilityRateQPP": 178.24,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "99205",
+      "description": "Office o/p new hi 60 min",
+      "nonFacilityTotalRvu": 7.09,
+      "nationalNonFacilityRate": 236.81,
+      "nationalNonFacilityRateQPP": 237.99,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "99211",
+      "description": "Off/op est may x req phy/qhp",
+      "nonFacilityTotalRvu": 0.73,
+      "nationalNonFacilityRate": 24.38,
+      "nationalNonFacilityRateQPP": 24.5,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "99212",
+      "description": "Office o/p est sf 10 min",
+      "nonFacilityTotalRvu": 1.78,
+      "nationalNonFacilityRate": 59.45,
+      "nationalNonFacilityRateQPP": 59.75,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "99213",
+      "description": "Office o/p est low 20 min",
+      "nonFacilityTotalRvu": 2.85,
+      "nationalNonFacilityRate": 95.19,
+      "nationalNonFacilityRateQPP": 95.67,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "99214",
+      "description": "Office o/p est mod 30 min",
+      "nonFacilityTotalRvu": 4.06,
+      "nationalNonFacilityRate": 135.61,
+      "nationalNonFacilityRateQPP": 136.28,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "99215",
+      "description": "Office o/p est hi 40 min",
+      "nonFacilityTotalRvu": 5.76,
+      "nationalNonFacilityRate": 192.39,
+      "nationalNonFacilityRateQPP": 193.35,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "71045",
+      "description": "X-ray exam chest 1 view",
+      "nonFacilityTotalRvu": 0.76,
+      "nationalNonFacilityRate": 25.38,
+      "nationalNonFacilityRateQPP": 25.51,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "71046",
+      "description": "X-ray exam chest 2 views",
+      "nonFacilityTotalRvu": 0.99,
+      "nationalNonFacilityRate": 33.07,
+      "nationalNonFacilityRateQPP": 33.23,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "70450",
+      "description": "Ct head/brain w/o dye",
+      "nonFacilityTotalRvu": 3.19,
+      "nationalNonFacilityRate": 106.55,
+      "nationalNonFacilityRateQPP": 107.08,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "70486",
+      "description": "Ct maxillofacial w/o dye",
+      "nonFacilityTotalRvu": 3.84,
+      "nationalNonFacilityRate": 128.26,
+      "nationalNonFacilityRateQPP": 128.9,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "70553",
+      "description": "Mri brain stem w/o & w/dye",
+      "nonFacilityTotalRvu": 9.49,
+      "nationalNonFacilityRate": 316.97,
+      "nationalNonFacilityRateQPP": 318.56,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "72148",
+      "description": "Mri lumbar spine w/o dye",
+      "nonFacilityTotalRvu": 5.74,
+      "nationalNonFacilityRate": 191.72,
+      "nationalNonFacilityRateQPP": 192.68,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "72100",
+      "description": "X-ray exam l-s spine 2/3 vws",
+      "nonFacilityTotalRvu": 1.21,
+      "nationalNonFacilityRate": 40.42,
+      "nationalNonFacilityRateQPP": 40.62,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "73030",
+      "description": "X-ray exam of shoulder",
+      "nonFacilityTotalRvu": 1.07,
+      "nationalNonFacilityRate": 35.74,
+      "nationalNonFacilityRateQPP": 35.92,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "73110",
+      "description": "X-ray exam of wrist",
+      "nonFacilityTotalRvu": 1.28,
+      "nationalNonFacilityRate": 42.75,
+      "nationalNonFacilityRateQPP": 42.97,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "73610",
+      "description": "X-ray exam of ankle",
+      "nonFacilityTotalRvu": 1.11,
+      "nationalNonFacilityRate": 37.07,
+      "nationalNonFacilityRateQPP": 37.26,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "73630",
+      "description": "X-ray exam of foot",
+      "nonFacilityTotalRvu": 1.02,
+      "nationalNonFacilityRate": 34.07,
+      "nationalNonFacilityRateQPP": 34.24,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "74176",
+      "description": "Ct abd & pelvis w/o contrast",
+      "nonFacilityTotalRvu": 5.48,
+      "nationalNonFacilityRate": 183.04,
+      "nationalNonFacilityRateQPP": 183.95,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "74177",
+      "description": "Ct abd & pelvis w/contrast",
+      "nonFacilityTotalRvu": 8.99,
+      "nationalNonFacilityRate": 300.27,
+      "nationalNonFacilityRateQPP": 301.77,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "74018",
+      "description": "Radex abdomen 1 view",
+      "nonFacilityTotalRvu": 0.89,
+      "nationalNonFacilityRate": 29.73,
+      "nationalNonFacilityRateQPP": 29.88,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "76700",
+      "description": "Us exam abdom complete",
+      "nonFacilityTotalRvu": 3.42,
+      "nationalNonFacilityRate": 114.23,
+      "nationalNonFacilityRateQPP": 114.8,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "76705",
+      "description": "Echo exam of abdomen",
+      "nonFacilityTotalRvu": 2.58,
+      "nationalNonFacilityRate": 86.17,
+      "nationalNonFacilityRateQPP": 86.6,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "76856",
+      "description": "Us exam pelvic complete",
+      "nonFacilityTotalRvu": 3.15,
+      "nationalNonFacilityRate": 105.21,
+      "nationalNonFacilityRateQPP": 105.74,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "76830",
+      "description": "Transvaginal us non-ob",
+      "nonFacilityTotalRvu": 3.52,
+      "nationalNonFacilityRate": 117.57,
+      "nationalNonFacilityRateQPP": 118.16,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "76805",
+      "description": "Ob us >/= 14 wks sngl fetus",
+      "nonFacilityTotalRvu": 4.07,
+      "nationalNonFacilityRate": 135.94,
+      "nationalNonFacilityRateQPP": 136.62,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "77067",
+      "description": "Scr mammo bi incl cad",
+      "nonFacilityTotalRvu": 3.78,
+      "nationalNonFacilityRate": 126.26,
+      "nationalNonFacilityRateQPP": 126.89,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "93000",
+      "description": "Electrocardiogram complete",
+      "nonFacilityTotalRvu": 0.46,
+      "nationalNonFacilityRate": 15.36,
+      "nationalNonFacilityRateQPP": 15.44,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "93306",
+      "description": "Tte w/doppler complete",
+      "nonFacilityTotalRvu": 5.89,
+      "nationalNonFacilityRate": 196.73,
+      "nationalNonFacilityRateQPP": 197.71,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "93005",
+      "description": "Electrocardiogram tracing",
+      "nonFacilityTotalRvu": 0.21,
+      "nationalNonFacilityRate": 7.01,
+      "nationalNonFacilityRateQPP": 7.05,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "96372",
+      "description": "Ther/proph/diag inj sc/im",
+      "nonFacilityTotalRvu": 0.46,
+      "nationalNonFacilityRate": 15.36,
+      "nationalNonFacilityRateQPP": 15.44,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "96374",
+      "description": "Ther/proph/diag inj iv push",
+      "nonFacilityTotalRvu": 1.13,
+      "nationalNonFacilityRate": 37.74,
+      "nationalNonFacilityRateQPP": 37.93,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "12001",
+      "description": "Rpr s/n/ax/gen/trnk 2.5cm/<",
+      "nonFacilityTotalRvu": 3.41,
+      "nationalNonFacilityRate": 113.9,
+      "nationalNonFacilityRateQPP": 114.47,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "12002",
+      "description": "Rpr s/n/ax/gen/trnk2.6-7.5cm",
+      "nonFacilityTotalRvu": 4.17,
+      "nationalNonFacilityRate": 139.28,
+      "nationalNonFacilityRateQPP": 139.98,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "12011",
+      "description": "Rpr f/e/e/n/l/m 2.5 cm/<",
+      "nonFacilityTotalRvu": 4.18,
+      "nationalNonFacilityRate": 139.62,
+      "nationalNonFacilityRateQPP": 140.31,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "29125",
+      "description": "Appl short arm splint static",
+      "nonFacilityTotalRvu": 2.37,
+      "nationalNonFacilityRate": 79.16,
+      "nationalNonFacilityRateQPP": 79.55,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "29515",
+      "description": "Application short leg splint",
+      "nonFacilityTotalRvu": 2.47,
+      "nationalNonFacilityRate": 82.5,
+      "nationalNonFacilityRateQPP": 82.91,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "20610",
+      "description": "Drain/inj joint/bursa w/o us",
+      "nonFacilityTotalRvu": 2.06,
+      "nationalNonFacilityRate": 68.81,
+      "nationalNonFacilityRateQPP": 69.15,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "11102",
+      "description": "Tangntl bx skin single les",
+      "nonFacilityTotalRvu": 2.86,
+      "nationalNonFacilityRate": 95.53,
+      "nationalNonFacilityRateQPP": 96.0,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "17110",
+      "description": "Destruction b9 les up to 14",
+      "nonFacilityTotalRvu": 3.33,
+      "nationalNonFacilityRate": 111.22,
+      "nationalNonFacilityRateQPP": 111.78,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "45378",
+      "description": "Diagnostic colonoscopy",
+      "nonFacilityTotalRvu": 11.32,
+      "nationalNonFacilityRate": 378.1,
+      "nationalNonFacilityRateQPP": 379.98,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "43239",
+      "description": "Egd biopsy single/multiple",
+      "nonFacilityTotalRvu": 12.54,
+      "nationalNonFacilityRate": 418.85,
+      "nationalNonFacilityRateQPP": 420.94,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "94640",
+      "description": "Airway inhalation treatment",
+      "nonFacilityTotalRvu": 0.26,
+      "nationalNonFacilityRate": 8.68,
+      "nationalNonFacilityRateQPP": 8.73,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "90471",
+      "description": "Immunization admin",
+      "nonFacilityTotalRvu": 0.66,
+      "nationalNonFacilityRate": 22.04,
+      "nationalNonFacilityRateQPP": 22.15,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "69210",
+      "description": "Remove impacted ear wax uni",
+      "nonFacilityTotalRvu": 1.43,
+      "nationalNonFacilityRate": 47.76,
+      "nationalNonFacilityRateQPP": 48.0,
+      "oppsCapMayApply": false
+    },
+    {
+      "cpt": "10060",
+      "description": "I&d abscess simple/single",
+      "nonFacilityTotalRvu": 3.85,
+      "nationalNonFacilityRate": 128.59,
+      "nationalNonFacilityRateQPP": 129.23,
+      "oppsCapMayApply": false
+    }
+  ],
+  "excluded": [
+    {
+      "code": "99281",
+      "desc": "Emr dpt vst mayx req phy/qhp",
+      "reason": "non-facility not applicable (NA)"
+    },
+    {
+      "code": "99282",
+      "desc": "Emergency dept visit sf mdm",
+      "reason": "non-facility not applicable (NA)"
+    },
+    {
+      "code": "99283",
+      "desc": "Emergency dept visit low mdm",
+      "reason": "non-facility not applicable (NA)"
+    },
+    {
+      "code": "99284",
+      "desc": "Emergency dept visit mod mdm",
+      "reason": "non-facility not applicable (NA)"
+    },
+    {
+      "code": "99285",
+      "desc": "Emergency dept visit hi mdm",
+      "reason": "non-facility not applicable (NA)"
+    },
+    {
+      "code": "85025",
+      "desc": "Complete cbc w/auto diff wbc",
+      "reason": "status X: not paid under PFS"
+    },
+    {
+      "code": "80053",
+      "desc": "Comprehen metabolic panel",
+      "reason": "status X: not paid under PFS"
+    },
+    {
+      "code": "36415",
+      "desc": "Coll venous bld venipuncture",
+      "reason": "status X: not paid under PFS"
+    }
+  ]
+}
