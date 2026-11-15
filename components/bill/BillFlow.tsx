@@ -115,7 +115,9 @@ export function BillFlow() {
         dropped,
         extractError:
           bill.lines.length === 0
-            ? "We didn't find any line items with charges on that bill. Add them below by hand."
+            ? files.length
+              ? "We didn't find any line items with charges. Make sure the whole page is in the photo, including the amounts column — or add the lines below by hand."
+              : "We didn't find any line items with charges on that bill. Add them below by hand."
             : null,
         // New bill → take the provider/state printed on it; the user can edit both on the next screen.
         provider: bill.provider?.trim() || "",
