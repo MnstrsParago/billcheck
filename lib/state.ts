@@ -28,6 +28,8 @@ export type Draft = {
   rows: EditableLine[];
   dropped: { index: number; reason: string }[];
   extractError: string | null;
+  /** True when the lines came from one of the sample bills — disputes from it are saved as demo data. */
+  fromSample: boolean;
   /** Lines committed by "Run audit" — the result screen audits exactly these. */
   auditedLines: BillLine[] | null;
 };
@@ -45,6 +47,7 @@ export function emptyDraft(): Draft {
     rows: [],
     dropped: [],
     extractError: null,
+    fromSample: false,
     auditedLines: null,
   };
 }
@@ -135,6 +138,7 @@ export function loadDraft(): Draft | null {
     if (typeof d.text !== "string") d.text = "";
     if (typeof d.provider !== "string") d.provider = "";
     if (typeof d.hospitalState !== "string") d.hospitalState = "";
+    d.fromSample = d.fromSample === true;
     return d;
   } catch {
     return null;

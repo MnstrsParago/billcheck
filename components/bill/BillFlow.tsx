@@ -111,6 +111,7 @@ export function BillFlow() {
       const dropped = body.dropped ?? [];
       go({
         step: "lines",
+        fromSample: files.length === 0 && SAMPLES.some((s) => s.text.trim() === text),
         rows: bill.lines.map((l) => lineToRow(l)),
         dropped,
         extractError:
@@ -129,6 +130,7 @@ export function BillFlow() {
     const msg = networkError ?? errorFor(status, body);
     go({
       step: "lines",
+      fromSample: files.length === 0 && SAMPLES.some((s) => s.text.trim() === text),
       rows: [emptyRow()],
       dropped: [],
       extractError: msg,
@@ -144,7 +146,13 @@ export function BillFlow() {
   };
 
   const manual = () =>
-    go({ step: "lines", rows: draft.rows.length ? draft.rows : [emptyRow()], dropped: [], extractError: null });
+    go({
+      step: "lines",
+      rows: draft.rows.length ? draft.rows : [emptyRow()],
+      fromSample: draft.rows.length ? draft.fromSample : false,
+      dropped: [],
+      extractError: null,
+    });
 
   const runIt = () => go({ step: "result", auditedLines: draft.rows.map(rowToLine) });
 
@@ -199,6 +207,7 @@ export function BillFlow() {
           hospitalState={draft.hospitalState}
           household={draft.household}
           onHousehold={(household) => patch({ household })}
+          fromSample={draft.fromSample}
           gfeInput={draft.gfe}
           onGfe={(gfe) => patch({ gfe })}
           onEditLines={() => go({ step: "lines" })}

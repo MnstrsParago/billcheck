@@ -22,6 +22,9 @@ export const outcomePayloadSchema = z
     state: z.string().regex(/^[A-Z]{2}$/).nullable(),
     status: z.enum(["resolved", "escalated"]),
     lines: z.array(outcomeLineSchema).min(1).max(100),
+    /** true for disputes started during the Judge tour or from a sample bill. A client can only mark rows demo,
+     * never turn demo rows into real ones (demo ids are reserved). */
+    demo: z.boolean().optional(),
   })
   .superRefine((p, ctx) => {
     if (!normalizeHospital(p.hospital)) {
@@ -39,7 +42,7 @@ export const outcomePayloadSchema = z
 
 export type OutcomePayload = z.infer<typeof outcomePayloadSchema>;
 
-/** Turn a validated payload into anonymous records. Server always forces demo:false. */
+/** Turn a validated payload into anonymous records. Rows are real (demo:false) unless the client marked them demo. */
 export function payloadToRecords(p: OutcomePayload, now: Date = new Date()): OutcomeRecord[] {
   // Day precision only, to avoid fingerprinting.
   const createdAt = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).toISOString();
@@ -55,7 +58,7 @@ export function payloadToRecords(p: OutcomePayload, now: Date = new Date()): Out
     finalPrice: Math.min(l.finalPrice, l.originalPrice),
     argument: l.argument,
     status: p.status,
-    demo: false,
+    demo: p.demo === true,
     createdAt,
   }));
 }

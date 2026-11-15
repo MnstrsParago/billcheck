@@ -6,6 +6,7 @@ import { formatUSD } from "@/lib/audit";
 import { buildCharityLetter, buildDisputeLetter, buildPpdrRequest, canBuildCharityLetter, letterFilename } from "@/lib/letters";
 import { checkGfe, GFE_LABEL, type GfeInput } from "@/lib/audit/gfe";
 import { useNow } from "@/lib/tracker/clock";
+import { isTourActive } from "@/components/tour/JudgeTour";
 import { setPro, usePro } from "@/lib/pro";
 import { createDispute } from "@/lib/tracker/store";
 import type { AuditResult, BillLine, HouseholdInput } from "@/lib/types";
@@ -36,9 +37,11 @@ export function ResultStep({
   onHousehold,
   gfeInput,
   onGfe,
+  fromSample,
   onEditLines,
   onNewBill,
 }: {
+  fromSample: boolean;
   gfeInput: GfeInput;
   onGfe: (g: GfeInput) => void;
   result: AuditResult;
@@ -84,7 +87,8 @@ export function ResultStep({
 
   const startDispute = () => {
     try {
-      createDispute({ provider: provider.trim(), state: hospitalState || null, billTotal, findings, ...(ppdr ? { ppdr } : {}) });
+      const demo = fromSample || isTourActive();
+      createDispute({ provider: provider.trim(), state: hospitalState || null, billTotal, findings, demo, ...(ppdr ? { ppdr } : {}) });
       router.push("/tracker");
     } catch {
       setStartError("Couldn't save the dispute in this browser (storage may be blocked).");

@@ -9,6 +9,15 @@ import { listDisputes } from "@/lib/tracker/store";
 export const TOUR_START_EVENT = "bc:tour-start";
 const KEY = "bc.tour.v1";
 
+/** True while the Judge tour is running — anything saved then is demo data. */
+export function isTourActive(): boolean {
+  try {
+    return typeof window !== "undefined" && window.localStorage.getItem(KEY) !== null;
+  } catch {
+    return false;
+  }
+}
+
 type Saved = { step: number; disputeId: string | null };
 
 function load(): Saved | null {

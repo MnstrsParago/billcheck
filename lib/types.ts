@@ -136,6 +136,8 @@ export type Dispute = {
   outcomeShared?: boolean; // true once written to the shared outcomes DB
   /** "itemized_request": only a summary bill — we asked the hospital for the itemized bill (14-day follow-up). */
   kind?: "dispute" | "itemized_request";
+  /** Started during the Judge tour or from a sample bill: its outcome is saved as demo data, not as a real result. */
+  demo?: boolean;
   /** No Surprises Act: federal patient-provider dispute (PPDR) data, when the bill exceeds the GFE by $400+. */
   ppdr?: PpdrInfo;
 };

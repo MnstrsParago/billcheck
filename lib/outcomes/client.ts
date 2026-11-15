@@ -29,7 +29,7 @@ export function buildOutcomePayload(d: Dispute) {
       };
     });
   if (lines.length === 0) return null;
-  return { disputeId, hospital, state, status: d.status, lines };
+  return { disputeId, hospital, state, status: d.status, lines, ...(d.demo ? { demo: true } : {}) };
 }
 
 export async function shareOutcome(d: Dispute): Promise<{ ok: boolean }> {

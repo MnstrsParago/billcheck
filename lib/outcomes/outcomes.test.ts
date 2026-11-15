@@ -135,14 +135,18 @@ describe("payload schema", () => {
     status: "resolved" as const,
     lines: [{ lineId: "l1", cpt: "99213", originalPrice: 500, finalPrice: 200, argument: "above_medicare" as const }],
   };
-  it("accepts a valid payload and forces demo:false", () => {
+  it("accepts a valid payload; real by default", () => {
     const p = outcomePayloadSchema.parse(good);
     const recs = payloadToRecords(p, new Date("2026-05-05T13:14:15Z"));
     expect(recs[0]).toMatchObject({ id: "abc-123:l1", hospitalKey: "riverside general hospital", demo: false, createdAt: "2026-05-05T00:00:00.000Z" });
   });
+  it("tour / sample-bill disputes are stored as demo", () => {
+    expect(payloadToRecords(outcomePayloadSchema.parse({ ...good, demo: true }))[0].demo).toBe(true);
+    expect(payloadToRecords(outcomePayloadSchema.parse({ ...good, demo: false }))[0].demo).toBe(false);
+  });
   it("rejects extra keys (no free text / patient data)", () => {
     expect(outcomePayloadSchema.safeParse({ ...good, patientName: "x" }).success).toBe(false);
-    expect(outcomePayloadSchema.safeParse({ ...good, demo: true }).success).toBe(false);
+    expect(outcomePayloadSchema.safeParse({ ...good, demo: "yes" }).success).toBe(false);
     expect(outcomePayloadSchema.safeParse({ ...good, lines: [{ ...good.lines[0], description: "x" }] }).success).toBe(false);
   });
   it("validates fields", () => {
@@ -196,5 +200,18 @@ describe("client payload builder", () => {
   });
   it("returns null for open disputes", () => {
     expect(buildOutcomePayload({ ...dispute, status: "waiting" })).toBeNull();
+  });
+});
+
+describe("client payload demo flag", () => {
+  it("marks tour / sample disputes as demo, others real", async () => {
+    const { buildOutcomePayload } = await import("./client");
+    const d: Dispute = {
+      id: "d-9", provider: "X Hospital", state: "TX", amountDisputed: 1, billTotal: 1, startedAt: "2026-01-01T00:00:00Z",
+      status: "resolved", events: [], findings: [],
+      lines: [{ lineId: "l1", cpt: "99213", description: "v", originalPrice: 100, finalPrice: 50, argument: "above_medicare" }],
+    };
+    expect(buildOutcomePayload(d)).not.toHaveProperty("demo");
+    expect(buildOutcomePayload({ ...d, demo: true })).toMatchObject({ demo: true });
   });
 });

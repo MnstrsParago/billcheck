@@ -74,6 +74,7 @@ export type CreateDisputeInput = {
   findings: Finding[];
   kind?: Dispute["kind"];
   ppdr?: Dispute["ppdr"];
+  demo?: boolean;
 };
 
 export function createDispute(input: CreateDisputeInput): Dispute {
@@ -104,6 +105,7 @@ export function createDispute(input: CreateDisputeInput): Dispute {
     findings: input.findings,
     ...(input.kind ? { kind: input.kind } : {}),
     ...(input.ppdr ? { ppdr: input.ppdr } : {}),
+    ...(input.demo ? { demo: true } : {}),
   };
   writeAll([dispute, ...parse(readRaw())]);
   return dispute;
