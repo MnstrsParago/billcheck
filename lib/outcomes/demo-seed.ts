@@ -4,11 +4,13 @@
  * "Lakeview Medical Center" (OH) match the app's sample bills.
  */
 import type { OutcomeRecord, WinningArgument } from "@/lib/types";
-import pfs from "@/data/medicare-pfs-2026.json";
+import { getMedicareRate } from "@/lib/audit/medicare";
 import { normalizeHospital } from "./normalize";
 
 type Rate = { cpt: string; nationalNonFacilityRate: number };
-const RATES: Rate[] = (pfs as { rates: Rate[] }).rates;
+/** The 48 common codes the demo set is drawn from (fixed list keeps the generator's output stable). */
+export const DEMO_CODES = ["99202", "99203", "99204", "99205", "99211", "99212", "99213", "99214", "99215", "71045", "71046", "70450", "70486", "70553", "72148", "72100", "73030", "73110", "73610", "73630", "74176", "74177", "74018", "76700", "76705", "76856", "76830", "76805", "77067", "93000", "93306", "93005", "96372", "96374", "12001", "12002", "12011", "29125", "29515", "20610", "11102", "17110", "45378", "43239", "94640", "90471", "69210", "10060"];
+const RATES: Rate[] = DEMO_CODES.map((cpt) => ({ cpt, nationalNonFacilityRate: getMedicareRate(cpt) ?? 0 }));
 const RATE_BY_CPT = new Map(RATES.map((r) => [r.cpt, r.nationalNonFacilityRate]));
 
 /** mulberry32 — tiny seeded PRNG. */

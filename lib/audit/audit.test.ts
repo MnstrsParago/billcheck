@@ -4,6 +4,7 @@ import {
   runAudit, findDuplicates, checkMedicare, checkCharity, stateToRegion, US_STATES,
   getMedicareRate, MEDICARE_DISCLAIMER, MEDICARE_MULTIPLIER, formatUSD,
 } from "./index";
+import { getOppsRate, OPPS_DISCLAIMER, OPPS_MULTIPLIER, PFS_CODE_COUNT } from "@/lib/audit/medicare";
 import { SAMPLES } from "@/lib/samples";
 
 let n = 0;
@@ -97,7 +98,7 @@ describe("checkMedicare", () => {
     expect(checkMedicare([L("g0001", 412)], new Set()).lineStatus[0].status).toBe("no_reference");
   });
   it("statuses: excluded, no_reference, no_cpt", () => {
-    const { lineStatus, findings } = checkMedicare([L("99285", 9999), L("85025", 9999), L("12345", 9999), L(null, 5), L("", 5)], new Set());
+    const { lineStatus, findings } = checkMedicare([L("11004", 9999), L("85025", 9999), L("12345", 9999), L(null, 5), L("", 5)], new Set());
     expect(findings).toHaveLength(0);
     expect(lineStatus[0]).toMatchObject({ status: "excluded", reason: expect.stringContaining("NA") });
     expect(lineStatus[1]).toMatchObject({ status: "excluded", reason: expect.stringContaining("status X") });
@@ -110,6 +111,26 @@ describe("checkMedicare", () => {
     const r = checkMedicare([l], new Set([l.id]));
     expect(r.findings).toHaveLength(0);
     expect(r.lineStatus[0].status).toBe("reference");
+  });
+  it("uses the full PFS table (any CPT with a non-facility rate)", () => {
+    expect(getMedicareRate("99213")).toBe(95.19);
+    expect(getMedicareRate("71046")).toBe(33.07);
+    expect(PFS_CODE_COUNT).toBeGreaterThan(3000);
+  });
+  it("falls back to OPPS facility rate with a 4× threshold and its own disclaimer", () => {
+    expect(getOppsRate("99285")).toEqual({ rate: 608.43, si: "J2", apc: "5025" });
+    const under = checkMedicare([L("99284", 4 * 426.3)], new Set());
+    expect(under.findings).toHaveLength(0);
+    expect(under.lineStatus[0]).toMatchObject({ status: "reference", kind: "opps", medicareRate: 426.3 });
+    const over = checkMedicare([L("99284", 3000)], new Set());
+    expect(over.findings[0]).toMatchObject({ referenceKind: "opps", disputeAmount: 1294.8, title: expect.stringContaining("Hospital fee") });
+    expect(over.findings[0].explanation).toContain(OPPS_DISCLAIMER);
+    expect(over.findings[0].source).toContain("Addendum B");
+  });
+  it("PFS takes precedence over OPPS when both exist", () => {
+    const r = checkMedicare([L("70450", 1980)], new Set());
+    expect(r.lineStatus[0]).toMatchObject({ kind: "pfs" });
+    expect(OPPS_MULTIPLIER).toBe(4);
   });
   it("ignores NaN charge", () => {
     expect(checkMedicare([L("71046", NaN)], new Set()).findings).toHaveLength(0);
@@ -162,8 +183,12 @@ describe("runAudit", () => {
     expect(dup).toHaveLength(1);
     expect(med.length).toBeGreaterThanOrEqual(2);
     expect(med.map((f) => f.lineId)).not.toContain(lines[3].id);
-    expect(med.map((f) => f.cpt).sort()).toEqual(["70450", "71046", "74177"]);
-    expect(r.totalDisputable).toBe(5927.33);
+    expect(med.map((f) => f.cpt).sort()).toEqual(["70450", "71046", "74177", "99285"]);
+    // ER visit 99285 has no PFS non-facility rate; it is checked against OPPS ($608.43, APC 5025) at 4×.
+    const er = med.find((f) => f.cpt === "99285")!;
+    expect(er.referenceKind).toBe("opps");
+    expect(er.disputeAmount).toBe(16.28); // 2450 - 4 × 608.43
+    expect(r.totalDisputable).toBe(5943.61);
     expect(r.billTotal).toBe(10119);
     expect(r.charity.status).toBe("not_checked");
     expect(r.lineStatus).toHaveLength(lines.length);

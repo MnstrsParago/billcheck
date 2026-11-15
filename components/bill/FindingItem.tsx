@@ -89,7 +89,8 @@ export function FindingItem({
               {f.source}
               {f.medicareRate !== undefined && (
                 <span className="block text-xs text-slate-500">
-                  Reference {formatUSD(f.medicareRate)}/unit
+                  {f.referenceKind === "opps" ? "Medicare hospital (OPPS) rate" : "Medicare physician (PFS) rate"}{" "}
+                  {formatUSD(f.medicareRate)}/unit
                   {f.multiple !== undefined ? ` · charged ${f.multiple.toFixed(1)}× reference` : ""}
                 </span>
               )}

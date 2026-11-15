@@ -42,9 +42,13 @@ function findingLine(f: Finding, i: number): string[] {
     );
   } else {
     const rate = f.medicareRate !== undefined ? usd(f.medicareRate) : "the Medicare reference rate";
-    const mult = f.multiple !== undefined ? `${f.multiple.toFixed(1)}x` : "more than 3x";
+    const opps = f.referenceKind === "opps";
+    const mult = f.multiple !== undefined ? `${f.multiple.toFixed(1)}x` : opps ? "more than 4x" : "more than 3x";
+    const table = opps
+      ? "the 2026 Medicare hospital outpatient (OPPS) national payment rate"
+      : "the 2026 Medicare national non-facility rate";
     out.push(
-      `   Issue: The price per unit is ${mult} the 2026 Medicare national non-facility rate for this code (${rate} per unit). ` +
+      `   Issue: The price per unit is ${mult} ${table} for this code (${rate} per unit). ` +
         "I am asking you to justify this price or reduce it to a reasonable amount.",
     );
   }

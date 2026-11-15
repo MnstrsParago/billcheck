@@ -37,6 +37,9 @@ export type HouseholdInput = {
 
 export type FindingType = "duplicate" | "above_medicare";
 
+/** pfs = Physician Fee Schedule national non-facility rate; opps = hospital outpatient (OPPS) facility rate. */
+export type ReferenceKind = "pfs" | "opps";
+
 export type Finding = {
   id: string; // `${type}:${lineId}`
   type: FindingType;
@@ -51,13 +54,14 @@ export type Finding = {
   explanation: string; // what is wrong, in plain English
   ruleRef: string; // rule / policy reference
   source: string; // where numbers come from
-  medicareRate?: number; // per-unit national non-facility rate
+  referenceKind?: ReferenceKind; // which Medicare table the price was compared with
+  medicareRate?: number; // per-unit reference rate (PFS non-facility or OPPS facility)
   multiple?: number; // charge per unit / medicareRate
   duplicateOfLineId?: string;
 };
 
 export type LineCheckStatus =
-  | { lineId: string; status: "reference"; medicareRate: number; multiple: number }
+  | { lineId: string; status: "reference"; kind: ReferenceKind; medicareRate: number; multiple: number }
   | { lineId: string; status: "no_reference" } // CPT not in our table
   | { lineId: string; status: "excluded"; reason: string } // in excluded list (ER visits, labs…)
   | { lineId: string; status: "no_cpt" };

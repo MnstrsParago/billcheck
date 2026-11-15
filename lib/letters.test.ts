@@ -131,3 +131,35 @@ describe("letterFilename", () => {
     expect(letterFilename("charity", null)).toBe("charity-care-request.txt");
   });
 });
+
+describe("dispute letter — hospital facility (OPPS) finding", () => {
+  it("names the OPPS outpatient rate instead of the physician fee schedule", () => {
+    const text = buildDisputeLetter({
+      provider: "Test Hospital",
+      billTotal: 2450,
+      totalDisputable: 16.28,
+      findings: [
+        {
+          id: "above_medicare:x",
+          type: "above_medicare",
+          lineId: "x",
+          cpt: "99285",
+          description: "ER visit",
+          dateOfService: "2026-03-14",
+          charge: 2450,
+          units: 1,
+          disputeAmount: 16.28,
+          title: "Hospital fee well above Medicare facility rate",
+          explanation: "",
+          ruleRef: "",
+          source: "",
+          referenceKind: "opps",
+          medicareRate: 608.43,
+          multiple: 4,
+        },
+      ],
+    });
+    expect(text).toContain("hospital outpatient (OPPS)");
+    expect(text).toContain("$608.43");
+  });
+});

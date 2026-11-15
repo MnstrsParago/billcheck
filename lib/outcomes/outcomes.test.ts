@@ -5,7 +5,7 @@ import { codeStats, median, rankHospitals, reductionPct, topArgument, totals } f
 import { DEMO_HOSPITALS, generateDemoOutcomes } from "./demo-seed";
 import { outcomePayloadSchema, payloadToRecords } from "./schema";
 import { buildOutcomePayload } from "./client";
-import pfs from "@/data/medicare-pfs-2026.json";
+import { getMedicareRate } from "@/lib/audit/medicare";
 
 const rec = (o: Partial<OutcomeRecord>): OutcomeRecord => ({
   id: Math.random().toString(36),
@@ -109,9 +109,8 @@ describe("demo seed", () => {
     expect(DEMO_HOSPITALS).toHaveLength(10);
   });
   it("prices are 3–12x Medicare per unit, finals never above original", () => {
-    const rate = new Map((pfs as { rates: { cpt: string; nationalNonFacilityRate: number }[] }).rates.map((r) => [r.cpt, r.nationalNonFacilityRate]));
     for (const r of a) {
-      const m = rate.get(r.cpt!)!;
+      const m = getMedicareRate(r.cpt)!;
       expect(m).toBeGreaterThan(0);
       const mult = r.originalPrice / m;
       expect(mult).toBeGreaterThanOrEqual(2.99);
