@@ -34,7 +34,7 @@ export function BillFlow() {
   const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [hydrated, setHydrated] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [files, setFiles] = useState<UploadFile[]>([]); // not persisted (too large for localStorage)
+  const [filesState, setFiles] = useState<UploadFile[]>([]); // not persisted (too large for localStorage)
   const abortRef = useRef<AbortController | null>(null);
   const topRef = useRef<HTMLDivElement>(null);
 
@@ -58,15 +58,18 @@ export function BillFlow() {
     requestAnimationFrame(() => topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
   };
 
-  const loadSample = (id: "A" | "B") => {
+  /** Load a sample bill and check it right away (one click). */
+  const trySample = (id: "A" | "B") => {
     const s = SAMPLES.find((x) => x.id === id);
     if (!s) return;
     setFiles([]);
     patch({ text: s.text, household: s.household ? { ...s.household } : { ...EMPTY_HOUSEHOLD } });
+    void extract({ text: s.text.trim(), files: [] });
   };
 
-  const extract = async () => {
-    const text = draft.text.trim();
+  const extract = async (override?: { text: string; files: UploadFile[] }) => {
+    const text = override ? override.text : draft.text.trim();
+    const files = override ? override.files : filesState;
     if (!text && files.length === 0) return;
     const payload = files.length
       ? { files: files.map((f) => ({ mediaType: f.mediaType, data: f.data })) }
@@ -173,7 +176,7 @@ export function BillFlow() {
         <div className="h-64 animate-pulse rounded-xl bg-slate-100" aria-hidden />
       ) : draft.step === "input" ? (
         <InputStep
-          files={files}
+          files={filesState}
           onFiles={setFiles}
           onTour={() => window.dispatchEvent(new Event(TOUR_START_EVENT))}
           text={draft.text}
@@ -181,8 +184,8 @@ export function BillFlow() {
           loading={loading}
           onText={(text) => patch({ text })}
           onHousehold={(household) => patch({ household })}
-          onSample={loadSample}
-          onSubmit={extract}
+          onTrySample={trySample}
+          onSubmit={() => void extract()}
           onManual={manual}
           onCancel={cancel}
         />

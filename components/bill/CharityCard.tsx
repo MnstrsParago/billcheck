@@ -1,9 +1,8 @@
 "use client";
 
-import { CHARITY_COPY, CHARITY_NOTE } from "@/lib/audit/charity";
+import { CHARITY_NOTE } from "@/lib/audit/charity";
 import { formatUSD } from "@/lib/audit";
 import type { CharityResult, CharityStatus, HouseholdInput } from "@/lib/types";
-import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { HouseholdFields } from "./HouseholdFields";
 
@@ -13,18 +12,23 @@ export const CHARITY_LABEL: Record<CharityStatus, string> = {
   not_likely: "Not likely",
   not_checked: "Not checked",
 };
-const TONE: Record<CharityStatus, BadgeTone> = {
-  likely: "emerald",
-  possibly: "amber",
-  not_likely: "slate",
-  not_checked: "sky",
+
+const STATUS_COLOR: Record<CharityStatus, string> = {
+  likely: "text-emerald-700",
+  possibly: "text-amber-700",
+  not_likely: "text-slate-500",
+  not_checked: "text-slate-500",
 };
 
-const REGION_LABEL: Record<CharityResult["region"], string> = {
-  contiguous48AndDC: "48 states + DC",
-  alaska: "Alaska",
-  hawaii: "Hawaii",
+const PLAIN: Record<CharityStatus, string> = {
+  likely: "Your income is low enough that many hospitals give care for free or at a big discount. Ask for it.",
+  possibly: "Many hospitals give a partial discount at your income. It's worth asking.",
+  not_likely: "Your income is probably above most hospitals' limits. Some hospitals still help, so you can ask.",
+  not_checked: "Many hospitals must lower or cancel bills for people with low or middle income. Tell us your household size and income to see if you may qualify.",
 };
+
+/** Whole-number FPL percent for plain text ("180%"). */
+const pct = (n: number) => `${Math.round(n)}%`;
 
 export function CharityCard({
   charity,
@@ -35,40 +39,35 @@ export function CharityCard({
   household: HouseholdInput;
   onHousehold: (h: HouseholdInput) => void;
 }) {
+  const checked = charity.status !== "not_checked";
   return (
-    <Card className="space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-base font-semibold">Charity care</h2>
-        <Badge tone={TONE[charity.status]}>{CHARITY_LABEL[charity.status]}</Badge>
+    <Card className="space-y-4">
+      <div>
+        <h3 className="text-xl font-semibold tracking-tight text-slate-900">Free or cheaper care</h3>
+        <p className={`mt-1 text-base font-medium ${STATUS_COLOR[charity.status]}`}>{CHARITY_LABEL[charity.status]}</p>
       </div>
-      {charity.status !== "not_checked" && charity.fplPercent !== null ? (
-        <p className="text-sm text-slate-700">
-          Income {formatUSD(charity.annualIncome ?? 0)} for a household of {charity.householdSize} is{" "}
-          <strong className="tabular-nums">{charity.fplPercent.toFixed(1)}%</strong> of the 2026 federal poverty level
-          {charity.guideline !== null && (
-            <>
-              {" "}
-              ({formatUSD(charity.guideline)}, {REGION_LABEL[charity.region]})
-            </>
-          )}
-          .
+      <p className="text-base text-slate-600">{PLAIN[charity.status]}</p>
+      {checked && charity.fplPercent !== null ? (
+        <p className="text-sm text-slate-500">
+          A household of {charity.householdSize} with {formatUSD(charity.annualIncome ?? 0)} a year is at{" "}
+          <span className="tabular-nums">{pct(charity.fplPercent)}</span> of the federal poverty line
+          {charity.guideline !== null ? <> ({formatUSD(charity.guideline)})</> : null}.
         </p>
       ) : null}
-      <p className="text-sm text-slate-600">{CHARITY_COPY[charity.status]}</p>
-      {charity.status === "not_checked" ? (
-        <div className="rounded-lg bg-slate-50 p-3">
-          <HouseholdFields value={household} onChange={onHousehold} idPrefix="res" />
-        </div>
+      {!checked ? (
+        <HouseholdFields value={household} onChange={onHousehold} idPrefix="res" />
       ) : (
-        <details className="text-sm">
-          <summary className="cursor-pointer text-slate-600 hover:text-slate-900">Change household details</summary>
-          <div className="mt-2 rounded-lg bg-slate-50 p-3">
+        <details className="group">
+          <summary className="cursor-pointer text-sm font-medium text-emerald-700 hover:text-emerald-800">
+            Change household details
+          </summary>
+          <div className="mt-3">
             <HouseholdFields value={household} onChange={onHousehold} idPrefix="res" />
           </div>
         </details>
       )}
-      <p className="text-xs text-slate-500">
-        {CHARITY_NOTE} Not added to the amount you can dispute.
+      <p className="text-xs leading-relaxed text-slate-400">
+        This is not added to the amount you can dispute. {CHARITY_NOTE}
       </p>
     </Card>
   );

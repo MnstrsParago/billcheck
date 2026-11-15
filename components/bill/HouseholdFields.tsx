@@ -24,11 +24,11 @@ export function HouseholdFields({
   const sizeInvalid = value.householdSize !== null && (value.householdSize < 1 || !Number.isInteger(value.householdSize));
   const incomeInvalid = value.annualIncome !== null && value.annualIncome < 0;
   return (
-    <div className="grid gap-3 sm:grid-cols-3">
+    <div className="grid gap-4 sm:grid-cols-3">
       <Field
-        label="Household size"
+        label="People in your household"
         htmlFor={`${idPrefix}-size`}
-        error={sizeInvalid ? "Whole number, 1 or more" : undefined}
+        error={sizeInvalid ? "Enter a whole number, 1 or more" : undefined}
       >
         <input
           id={`${idPrefix}-size`}
@@ -44,7 +44,7 @@ export function HouseholdFields({
         />
       </Field>
       <Field
-        label="Annual household income ($)"
+        label="Yearly household income ($)"
         htmlFor={`${idPrefix}-income`}
         error={incomeInvalid ? "Income can't be negative" : undefined}
       >
@@ -60,7 +60,7 @@ export function HouseholdFields({
           onChange={(e) => onChange({ ...value, annualIncome: toNum(e.target.value) })}
         />
       </Field>
-      <Field label="Your state" htmlFor={`${idPrefix}-state`} hint="Alaska and Hawaii use their own poverty tables.">
+      <Field label="Your state" htmlFor={`${idPrefix}-state`}>
         <select
           id={`${idPrefix}-state`}
           className={inputClass}

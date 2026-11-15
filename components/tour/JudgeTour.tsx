@@ -88,9 +88,7 @@ const STEPS: Step[] = [
       // Start from a clean input screen.
       if (first.dataset.tour === "new-bill") first.click();
       else if (first.dataset.tour === "run-audit") $('[data-tour="back"]')?.click();
-      (await waitFor('[data-tour="sample-A"]')).click();
-      await sleep(250);
-      (await waitFor('[data-tour="check"]:not([disabled])')).click();
+      (await waitFor('[data-tour="sample-A"]')).click(); // loads the sample and starts reading it
       scrollTo(await waitFor('[data-tour="run-audit"]', 80_000));
     },
   },

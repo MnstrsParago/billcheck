@@ -5,20 +5,19 @@ import { formatUSD } from "@/lib/audit";
 import { US_STATES } from "@/lib/audit/charity";
 import { emptyRow, parseMoney, validateRow, type EditableLine, type RowErrors } from "@/lib/state";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import { Field, inputClass } from "@/components/ui/Field";
 
-const GRID = "md:grid-cols-[9rem_5.5rem_5.5rem_minmax(0,1fr)_4rem_7rem_2.75rem] md:items-start";
+const GRID = "md:grid-cols-[9.5rem_6rem_5.5rem_minmax(0,1fr)_4.5rem_7.5rem_2.5rem] md:items-start";
 
 type ColKey = keyof Omit<EditableLine, "id">;
 type Col = { key: ColKey; label: string; placeholder: string; inputMode?: "numeric" | "decimal"; type?: string };
 const COLS: Col[] = [
   { key: "dateOfService", label: "Date", placeholder: "yyyy-mm-dd", type: "date" },
-  { key: "cpt", label: "CPT", placeholder: "70450" },
-  { key: "modifiers", label: "Modifiers", placeholder: "e.g. 59" },
-  { key: "description", label: "Description", placeholder: "CT head without contrast" },
-  { key: "units", label: "Units", placeholder: "1", inputMode: "numeric" },
-  { key: "charge", label: "Charge ($)", placeholder: "0.00", inputMode: "decimal" },
+  { key: "cpt", label: "Code", placeholder: "70450" },
+  { key: "modifiers", label: "Modifier", placeholder: "e.g. 59" },
+  { key: "description", label: "What it's for", placeholder: "CT head without contrast" },
+  { key: "units", label: "Qty", placeholder: "1", inputMode: "numeric" },
+  { key: "charge", label: "Price ($)", placeholder: "0.00", inputMode: "decimal" },
 ];
 
 export function LinesStep({
@@ -63,82 +62,69 @@ export function LinesStep({
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2">
-        <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">Review the bill lines</h1>
-        <Button variant="ghost" size="sm" data-tour="back" onClick={onBack}>
+    <div className="space-y-10">
+      <div>
+        <Button variant="ghost" size="sm" className="-ml-3.5" data-tour="back" onClick={onBack}>
           ← Back
         </Button>
+        <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 sm:text-5xl">Check the charges we found</h1>
+        <p className="mt-3 text-lg text-slate-600">Fix anything that looks wrong, then check the bill.</p>
       </div>
 
-      {extractError ? (
-        <div role="alert" className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
-          <p className="font-medium">We couldn&apos;t read the bill automatically.</p>
+      {extractError && (
+        <div role="alert" className="rounded-3xl bg-amber-50 p-5 text-base text-amber-900 sm:p-6">
+          <p className="font-semibold">We couldn&apos;t read your bill automatically.</p>
           <p className="mt-1">{extractError}</p>
-          <p className="mt-1">You can still enter the lines below by hand. The audit works exactly the same way.</p>
+          <p className="mt-1">No problem — type the charges below. The check works the same way.</p>
         </div>
-      ) : (
-        <p className="text-sm text-slate-600">
-          Check that each line matches your bill. Fix anything that looks off, delete lines that aren&apos;t charges, or add
-          missing ones.
-        </p>
       )}
 
       {dropped.length > 0 && (
-        <div className="rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-700">
-          <p className="font-medium">
-            {dropped.length} line{dropped.length === 1 ? "" : "s"} could not be read and{" "}
-            {dropped.length === 1 ? "was" : "were"} left out:
+        <div className="rounded-3xl bg-slate-50 p-5 text-base text-slate-700 sm:p-6">
+          <p className="font-semibold text-slate-900">
+            We couldn&apos;t read {dropped.length} line{dropped.length === 1 ? "" : "s"}, so we left{" "}
+            {dropped.length === 1 ? "it" : "them"} out.
           </p>
-          <ul className="mt-1 list-inside list-disc text-xs text-slate-600">
+          <ul className="mt-2 space-y-1 text-sm text-slate-600">
             {dropped.map((d) => (
               <li key={d.index}>
                 Line {d.index + 1}: {d.reason}
               </li>
             ))}
           </ul>
-          <p className="mt-1 text-xs text-slate-500">Add them manually below if they are real charges.</p>
+          <p className="mt-2 text-sm text-slate-600">If they are real charges, add them below.</p>
         </div>
       )}
 
-      <Card>
-        <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_14rem]">
-          <Field
-            label="Hospital / provider name"
-            htmlFor="provider"
-            hint="Used in your letters and to show what others achieved at this hospital."
+      <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_14rem]">
+        <Field label="Hospital or doctor's office" htmlFor="provider" hint="We put this name in your letters.">
+          <input
+            id="provider"
+            className={inputClass}
+            value={provider}
+            placeholder="e.g. Riverside General Hospital"
+            onChange={(e) => onProvider(e.target.value)}
+          />
+        </Field>
+        <Field label="Hospital's state" htmlFor="hospital-state">
+          <select
+            id="hospital-state"
+            className={inputClass}
+            value={hospitalState}
+            onChange={(e) => onHospitalState(e.target.value)}
           >
-            <input
-              id="provider"
-              className={inputClass}
-              value={provider}
-              placeholder="e.g. Riverside General Hospital"
-              onChange={(e) => onProvider(e.target.value)}
-            />
-          </Field>
-          <Field label="Hospital state" htmlFor="hospital-state">
-            <select
-              id="hospital-state"
-              className={inputClass}
-              value={hospitalState}
-              onChange={(e) => onHospitalState(e.target.value)}
-            >
-              <option value="">Unknown</option>
-              {US_STATES.map((s) => (
-                <option key={s.code} value={s.code}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
-          </Field>
-        </div>
-      </Card>
+            <option value="">Not sure</option>
+            {US_STATES.map((s) => (
+              <option key={s.code} value={s.code}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </Field>
+      </div>
 
-      <div className="space-y-2">
-        <div
-          className={`hidden gap-2 px-3 text-xs font-medium uppercase tracking-wide text-slate-500 md:grid ${GRID}`}
-          aria-hidden
-        >
+      <section aria-label="Charges" className="space-y-3">
+        <div className={`hidden gap-2 px-1 text-sm font-medium text-slate-500 md:grid ${GRID}`} aria-hidden>
           {COLS.map((c) => (
             <span key={c.key} className={c.key === "units" || c.key === "charge" ? "text-right" : ""}>
               {c.label}
@@ -147,25 +133,30 @@ export function LinesStep({
           <span />
         </div>
         {rows.length === 0 && (
-          <div className="rounded-xl border border-dashed border-slate-300 bg-white p-6 text-center text-sm text-slate-500">
-            No lines yet. Add the charges from your itemized bill.
+          <div className="rounded-3xl bg-slate-50 p-8 text-center text-base text-slate-500">
+            No charges yet. Add them from your itemized bill.
           </div>
         )}
-        <ol className="space-y-2">
+        <ol className="space-y-3 md:space-y-2">
           {rows.map((r, i) => {
             const e: RowErrors = showErrors ? errors[r.id] : {};
             const bad = Object.keys(e).length > 0;
             return (
-              <li key={r.id} className={`rounded-xl border bg-white p-3 ${bad ? "border-rose-300" : "border-slate-200"}`}>
-                <p className="mb-2 text-xs font-medium text-slate-500 md:hidden">Line {i + 1}</p>
-                <div className={`grid grid-cols-2 gap-2 ${GRID}`}>
+              <li
+                key={r.id}
+                className={`rounded-3xl p-4 md:rounded-2xl md:p-1 ${
+                  bad ? "bg-rose-50 ring-1 ring-rose-200" : "bg-slate-50 md:bg-transparent"
+                }`}
+              >
+                <p className="mb-3 text-sm font-medium text-slate-500 md:hidden">Charge {i + 1}</p>
+                <div className={`grid grid-cols-2 gap-3 md:gap-2 ${GRID}`}>
                   {COLS.map((c) => {
                     const id = `row-${r.id}-${c.key}`;
                     const err = c.key === "modifiers" ? undefined : e[c.key];
                     const numeric = c.key === "charge" || c.key === "units";
                     return (
-                      <div key={c.key} className={c.key === "description" ? "col-span-2 md:col-span-1" : ""}>
-                        <label htmlFor={id} className="mb-0.5 block text-xs text-slate-500 md:sr-only">
+                      <div key={c.key} className={`min-w-0 ${c.key === "description" ? "col-span-2 md:col-span-1" : ""}`}>
+                        <label htmlFor={id} className="mb-1 block text-sm text-slate-500 md:sr-only">
                           {c.label}
                           <span className="sr-only"> (line {i + 1})</span>
                         </label>
@@ -173,17 +164,17 @@ export function LinesStep({
                           id={id}
                           type={c.type ?? "text"}
                           inputMode={c.inputMode}
-                          className={`${inputClass} px-2 ${err ? "border-rose-400" : ""} ${numeric ? "text-right tabular-nums" : ""}`}
+                          className={`${inputClass} px-2.5 ${err ? "border-rose-400" : ""} ${numeric ? "text-right tabular-nums" : ""}`}
                           placeholder={c.placeholder}
                           value={r[c.key]}
                           aria-invalid={err ? true : undefined}
                           onChange={(ev) => update(r.id, c.key, ev.target.value)}
                         />
-                        {err && <p className="mt-0.5 text-xs text-rose-600">{err}</p>}
+                        {err && <p className="mt-1 text-sm text-rose-600">{err}</p>}
                       </div>
                     );
                   })}
-                  <div className="col-span-2 flex justify-end md:col-span-1 md:justify-center">
+                  <div className="col-span-2 flex justify-end md:col-span-1 md:justify-center md:pt-1">
                     <Button
                       variant="danger"
                       size="sm"
@@ -191,7 +182,7 @@ export function LinesStep({
                       aria-label={`Delete line ${i + 1}`}
                       title="Delete line"
                     >
-                      <span className="md:hidden">Delete line</span>
+                      <span className="md:hidden">Remove</span>
                       <span aria-hidden className="hidden md:inline">
                         ✕
                       </span>
@@ -203,28 +194,28 @@ export function LinesStep({
           })}
         </ol>
         <Button variant="secondary" onClick={add}>
-          + Add line
+          + Add a charge
         </Button>
-      </div>
+      </section>
 
-      <div className="sticky bottom-0 -mx-4 border-t border-slate-200 bg-slate-50/95 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-slate-600">
-            {rows.length} line{rows.length === 1 ? "" : "s"} · total{" "}
+      <div className="sticky bottom-0 -mx-5 bg-white/90 px-5 py-4 backdrop-blur-xl sm:static sm:mx-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-base text-slate-600">
+            {rows.length} charge{rows.length === 1 ? "" : "s"} · total{" "}
             <span className="font-semibold tabular-nums text-slate-900">{formatUSD(total)}</span>
             {showErrors && invalidCount > 0 && (
-              <span className="ml-2 text-rose-600" role="alert">
-                Fix {invalidCount} line{invalidCount === 1 ? "" : "s"} first
+              <span className="block text-sm text-rose-600 sm:ml-2 sm:inline" role="alert">
+                Please fix {invalidCount} charge{invalidCount === 1 ? "" : "s"} first
               </span>
             )}
             {showErrors && rows.length === 0 && (
-              <span className="ml-2 text-rose-600" role="alert">
-                Add at least one line
+              <span className="block text-sm text-rose-600 sm:ml-2 sm:inline" role="alert">
+                Add at least one charge
               </span>
             )}
           </p>
           <Button size="lg" data-tour="run-audit" onClick={run}>
-            Run audit
+            Check the bill
           </Button>
         </div>
       </div>

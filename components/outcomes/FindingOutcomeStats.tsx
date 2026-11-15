@@ -50,25 +50,22 @@ export function FindingOutcomeStats({ hospital, cpt, stats }: Props) {
 
   const people = s.count === 1 ? "1 person" : `${s.count} people`;
   return (
-    <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
-      <span>
-        At this hospital, {people} disputed this code
-        {s.reducedCount > 0 ? (
-          <>
-            ; {s.reducedCount} got it lowered, median reduction{" "}
-            <strong className="font-semibold">{Math.round(s.medianReductionPct)}%</strong>
-            {s.topArgument ? <>, winning argument: {argumentLabel(s.topArgument)}</> : null}.
-          </>
-        ) : (
-          <>; none got it lowered yet.</>
-        )}
-      </span>
+    <p className="mt-3 text-sm leading-relaxed text-emerald-800">
+      <span aria-hidden className="mr-1.5">●</span>
+      {people} at this hospital disputed this charge
+      {s.reducedCount > 0 ? (
+        <>
+          {" "}
+          · {s.reducedCount} got it lowered, usually by{" "}
+          <strong className="font-semibold">{Math.round(s.medianReductionPct)}%</strong>
+          {s.topArgument ? <> (most often for: {argumentLabel(s.topArgument)})</> : null}
+        </>
+      ) : (
+        <> · no one got it lowered yet</>
+      )}
       {s.demoCount > 0 ? (
-        <span
-          className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-amber-800"
-          title={`${s.demoCount} of ${s.count} outcomes are demo data`}
-        >
-          includes demo data
+        <span className="ml-1.5 text-slate-400" title={`${s.demoCount} of ${s.count} outcomes are demo data`}>
+          (includes demo data)
         </span>
       ) : null}
     </p>

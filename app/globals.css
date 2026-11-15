@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
 :root { color-scheme: light; }
-body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, system-ui, sans-serif; letter-spacing: -0.01em; }
+h1, h2, h3 { letter-spacing: -0.025em; }
 
 html { -webkit-text-size-adjust: 100%; }
 /* iOS zooms into inputs below 16px; keep form text at 16px on small screens. */

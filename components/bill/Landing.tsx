@@ -18,7 +18,7 @@ const STEPS = [
   },
 ];
 
-export function Landing({ onTour }: { onTour?: () => void }) {
+export function Landing({ onTour, onSampleB }: { onTour?: () => void; onSampleB?: () => void }) {
   const { average, count } = sampleAuditSummary();
   const fees = competitorFees(average);
   const ours = 12 * 3; // $12/mo over a typical 3-month dispute
@@ -101,6 +101,14 @@ export function Landing({ onTour }: { onTour?: () => void }) {
             </tr>
           </tbody>
         </table>
+        {onSampleB ? (
+          <p className="px-4 pt-3 text-sm text-slate-500">
+            Want to see the charity care check?{" "}
+            <button type="button" className="font-medium text-slate-900 underline-offset-4 hover:underline" onClick={onSampleB}>
+              Try a second sample (outpatient, low income)
+            </button>
+          </p>
+        ) : null}
         <p className="border-t border-slate-100 px-4 py-2 text-xs text-slate-500">
           *3 months of Pro for a typical 30–90 day dispute. Goodbill and Resolve negotiate on your behalf; BillCheck gives
           you the tools to do it yourself. Fees as published by each company (Nov 2026): Goodbill 20% of savings capped at

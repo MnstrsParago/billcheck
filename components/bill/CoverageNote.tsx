@@ -1,11 +1,10 @@
 import { MEDICARE_DISCLAIMER, MEDICARE_MULTIPLIER, OPPS_DISCLAIMER, OPPS_MULTIPLIER } from "@/lib/audit/medicare";
 import type { BillLine, LineCheckStatus } from "@/lib/types";
-import { Card } from "@/components/ui/Card";
 
 function friendlyReason(reason: string): string {
   const r = reason.toLowerCase();
-  if (r.includes("status x") || r.includes("lab")) return "lab tests (priced on the Clinical Lab Fee Schedule, not covered yet)";
-  if (r.includes("not applicable") || r.includes("(na)")) return "facility-only services with no separate Medicare outpatient rate";
+  if (r.includes("status x") || r.includes("lab")) return "lab tests (we can't check lab prices yet)";
+  if (r.includes("not applicable") || r.includes("(na)")) return "hospital-only services with no separate Medicare price";
   return reason;
 }
 
@@ -28,34 +27,33 @@ export function CoverageNote({ lineStatus, lines }: { lineStatus: LineCheckStatu
   const codes = (arr: string[]) => [...new Set(arr.filter(Boolean))].join(", ");
   const n = lineStatus.length;
 
+  const checkedPrices = pfs + opps;
   return (
-    <Card className="space-y-3">
-      <h2 className="text-base font-semibold">What we could check</h2>
-      <ul className="space-y-1.5 text-sm text-slate-700">
-        <li className="flex gap-2">
-          <span aria-hidden className="text-emerald-600">●</span>
-          <span>
-            <strong className="tabular-nums">{pfs + opps}</strong> of {n} line{n === 1 ? "" : "s"} compared with a 2026
-            Medicare reference price
+    <details className="group rounded-3xl bg-slate-50 px-5 py-4 sm:px-7 sm:py-5">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-base font-semibold text-slate-900 [&::-webkit-details-marker]:hidden">
+        What we checked
+        <span aria-hidden className="text-slate-400 transition-transform group-open:rotate-45">
+          +
+        </span>
+      </summary>
+      <div className="mt-4 space-y-4">
+        <ul className="space-y-2 text-base text-slate-600">
+          <li>
+            We compared <strong className="font-semibold text-slate-900 tabular-nums">{checkedPrices}</strong> of {n}{" "}
+            charge{n === 1 ? "" : "s"} with what Medicare pays in 2026
             {opps > 0 ? (
               <>
                 {" "}
-                ({pfs} with the physician fee schedule, {opps} with the hospital outpatient rate)
+                ({pfs} with the doctor price list, {opps} with the hospital price list)
               </>
             ) : null}
             .
-          </span>
-        </li>
-        <li className="flex gap-2">
-          <span aria-hidden className="text-emerald-600">●</span>
-          <span>All {n} lines checked for possible duplicates.</span>
-        </li>
-        {notCovered > 0 && (
-          <li className="flex gap-2">
-            <span aria-hidden className="text-amber-500">●</span>
-            <span>
-              <strong className="tabular-nums">{notCovered}</strong> line{notCovered === 1 ? " has" : "s have"} no
-              reference price
+          </li>
+          <li>We looked at all {n} charges for anything billed twice.</li>
+          {notCovered > 0 && (
+            <li>
+              <strong className="font-semibold text-slate-900 tabular-nums">{notCovered}</strong> charge
+              {notCovered === 1 ? " has" : "s have"} no Medicare price we could compare
               {excludedGroups.size > 0 && (
                 <>
                   :{" "}
@@ -63,7 +61,7 @@ export function CoverageNote({ lineStatus, lines }: { lineStatus: LineCheckStatu
                     <span key={label}>
                       {i > 0 ? "; " : ""}
                       {label}
-                      {codes(cpts) ? ` — ${codes(cpts)}` : ""}
+                      {codes(cpts) ? ` — code ${codes(cpts)}` : ""}
                     </span>
                   ))}
                 </>
@@ -71,38 +69,34 @@ export function CoverageNote({ lineStatus, lines }: { lineStatus: LineCheckStatu
               {noRef.length > 0 && (
                 <>
                   {excludedGroups.size > 0 ? "; " : ": "}
-                  {noRef.length} code{noRef.length === 1 ? " is" : "s are"} not priced in the 2026 Medicare tables
+                  {noRef.length} code{noRef.length === 1 ? " is" : "s are"} not in the 2026 Medicare price list
                   {codes(noRef.map((s) => byId.get(s.lineId)?.cpt ?? "")) &&
                     ` — ${codes(noRef.map((s) => byId.get(s.lineId)?.cpt ?? ""))}`}
                 </>
               )}
               .
-            </span>
+            </li>
+          )}
+          {noCpt > 0 && (
+            <li>
+              <strong className="font-semibold text-slate-900 tabular-nums">{noCpt}</strong> charge
+              {noCpt === 1 ? " has" : "s have"} no code, so we could only check it for being billed twice.
+            </li>
+          )}
+          <li>
+            We flag a doctor charge when it is more than {MEDICARE_MULTIPLIER} times the Medicare price
+            {opps > 0 ? <>, and a hospital fee when it is more than {OPPS_MULTIPLIER} times</> : null}.
           </li>
-        )}
-        {noCpt > 0 && (
-          <li className="flex gap-2">
-            <span aria-hidden className="text-slate-400">●</span>
-            <span>
-              <strong className="tabular-nums">{noCpt}</strong> line{noCpt === 1 ? " has" : "s have"} no CPT code, so only
-              the duplicate check applies.
-            </span>
-          </li>
-        )}
-      </ul>
-      <div className="space-y-1 text-xs text-slate-500">
-        <p>
-          <strong className="font-medium">Physician fees:</strong> {MEDICARE_DISCLAIMER} A line is flagged when its price
-          per unit is more than {MEDICARE_MULTIPLIER}× that reference. Source: CMS PFS RVU26D (CY2026).
-        </p>
-        {opps > 0 ? (
+        </ul>
+        <div className="space-y-2 text-xs leading-relaxed text-slate-400">
           <p>
-            <strong className="font-medium">Hospital facility fees</strong> (used when a code has no physician non-facility
-            rate, e.g. ER visits 99281–99285): {OPPS_DISCLAIMER} A line is flagged when its price per unit is more than{" "}
-            {OPPS_MULTIPLIER}× that rate. Source: CMS OPPS Addendum B, October 2026.
+            {MEDICARE_DISCLAIMER} Source: CMS PFS RVU26D (CY2026).
           </p>
-        ) : null}
+          <p>
+            {OPPS_DISCLAIMER} Source: CMS OPPS Addendum B, October 2026.
+          </p>
+        </div>
       </div>
-    </Card>
+    </details>
   );
 }

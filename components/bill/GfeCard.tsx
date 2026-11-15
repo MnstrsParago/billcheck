@@ -11,44 +11,46 @@ import {
   type GfeResult,
   type GfeStatus,
 } from "@/lib/audit/gfe";
-import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { inputClass } from "@/components/ui/Field";
 
-const TONE: Record<GfeStatus, BadgeTone> = {
-  not_checked: "sky",
-  insured: "slate",
-  below_threshold: "slate",
-  eligible: "emerald",
-  deadline_passed: "rose",
+const STATUS_COLOR: Record<GfeStatus, string> = {
+  not_checked: "text-slate-500",
+  insured: "text-slate-500",
+  below_threshold: "text-slate-500",
+  eligible: "text-emerald-700",
+  deadline_passed: "text-rose-700",
 };
 
 const longDate = (ymd: string) =>
   new Date(`${ymd}T00:00:00Z`).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
 
+const threshold = formatUSD(PPDR_THRESHOLD).replace(".00", "");
+
 /** (D) No Surprises Act: compare the bill with the Good Faith Estimate (uninsured / self-pay patients). */
 export function GfeCard({ gfe, input, onInput }: { gfe: GfeResult; input: GfeInput; onInput: (g: GfeInput) => void }) {
+  const diff = gfe.difference ?? 0;
   return (
-    <Card className="space-y-3" id="gfe-card">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-base font-semibold">Good Faith Estimate</h2>
-        <Badge tone={TONE[gfe.status]}>{GFE_LABEL[gfe.status]}</Badge>
+    <Card className="space-y-4" id="gfe-card">
+      <div>
+        <h3 className="text-xl font-semibold tracking-tight text-slate-900">Did you get a price estimate?</h3>
+        <p className={`mt-1 text-base font-medium ${STATUS_COLOR[gfe.status]}`}>{GFE_LABEL[gfe.status]}</p>
       </div>
-      <p className="text-sm text-slate-600">
-        Uninsured or paying yourself? Under the No Surprises Act the provider had to give you a Good Faith Estimate before
-        scheduled care. If the bill is {formatUSD(PPDR_THRESHOLD).replace(".00", "")} or more above it, you can ask a
-        federal reviewer to decide what you owe.
+      <p className="text-base text-slate-600">
+        If you paid without insurance, the provider had to give you a written price estimate (a &quot;Good Faith
+        Estimate&quot;) before planned care. If the bill is {threshold} or more above it, a federal reviewer can decide
+        what you really owe.
       </p>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <label className="block text-sm">
-          <span className="font-medium text-slate-700">Estimate total ($)</span>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="block">
+          <span className="mb-1 block text-sm font-medium text-slate-700">Estimate total ($)</span>
           <input
             type="number"
             inputMode="decimal"
             min={0}
             step="0.01"
-            className={`${inputClass} mt-1`}
+            className={inputClass}
             placeholder="e.g. 1200"
             value={input.gfeAmount ?? ""}
             onChange={(e) => {
@@ -57,58 +59,62 @@ export function GfeCard({ gfe, input, onInput }: { gfe: GfeResult; input: GfeInp
             }}
           />
         </label>
-        <label className="block text-sm">
-          <span className="font-medium text-slate-700">Date on the bill</span>
+        <label className="block">
+          <span className="mb-1 block text-sm font-medium text-slate-700">Date on the bill</span>
           <input
             type="date"
-            className={`${inputClass} mt-1`}
+            className={inputClass}
             value={input.billDate ?? ""}
             onChange={(e) => onInput({ ...input, billDate: e.target.value || null })}
           />
         </label>
       </div>
-      <label className="flex items-start gap-2 text-sm text-slate-700">
+      <label className="flex items-start gap-3 text-base text-slate-700">
         <input
           type="checkbox"
-          className="mt-0.5 h-4 w-4 accent-emerald-600"
+          className="mt-1 h-4 w-4 shrink-0 accent-emerald-600"
           checked={input.selfPay}
           onChange={(e) => onInput({ ...input, selfPay: e.target.checked })}
         />
-        I didn&apos;t have or didn&apos;t use health insurance for this care, and told the provider before the care.
+        I didn&apos;t use health insurance for this care, and I told the provider before the care.
       </label>
 
       {gfe.status === "not_checked" ? (
-        <p className="text-sm text-slate-600">Enter the estimate total and the date on the bill to check.</p>
+        <p className="text-sm text-slate-500">Enter the estimate and the bill date to check.</p>
       ) : (
-        <div className="rounded-lg bg-slate-50 p-3 text-sm text-slate-700">
+        <div className="space-y-1 rounded-2xl bg-white p-4 text-base text-slate-700">
           <p>
-            Billed {formatUSD(gfe.billed)} vs. estimate {formatUSD(gfe.gfeAmount ?? 0)}:{" "}
-            <strong>
-              {(gfe.difference ?? 0) >= 0 ? `${formatUSD(gfe.difference ?? 0)} over` : `${formatUSD(-(gfe.difference ?? 0))} under`}
+            You were billed {formatUSD(gfe.billed)}. The estimate was {formatUSD(gfe.gfeAmount ?? 0)}. That&apos;s{" "}
+            <strong className="font-semibold">
+              {diff >= 0 ? `${formatUSD(diff)} more` : `${formatUSD(-diff)} less`}
             </strong>
             .
           </p>
           {gfe.status === "eligible" && gfe.deadline && (
-            <p className="mt-1">
-              You can start a federal patient-provider dispute until <strong>{longDate(gfe.deadline)}</strong> (
-              {gfe.daysLeft} day{gfe.daysLeft === 1 ? "" : "s"} left; {PPDR_WINDOW_DAYS} days from the bill date). Fee: $
-              {PPDR_FEE}. While it&apos;s in progress the provider can&apos;t send the bill to collections.
+            <p>
+              You can ask for a federal review until <strong className="font-semibold">{longDate(gfe.deadline)}</strong> (
+              {gfe.daysLeft} day{gfe.daysLeft === 1 ? "" : "s"} left). It costs ${PPDR_FEE}. While it&apos;s open, the
+              provider can&apos;t send your bill to collections.
             </p>
           )}
           {gfe.status === "below_threshold" && (
-            <p className="mt-1">The federal dispute applies only when the bill is at least $400 above the estimate.</p>
+            <p>The federal review is only for bills at least {threshold} above the estimate.</p>
           )}
           {gfe.status === "deadline_passed" && gfe.deadline && (
-            <p className="mt-1">The 120-day window ended on {longDate(gfe.deadline)}. You can still dispute directly with the provider.</p>
+            <p>
+              The {PPDR_WINDOW_DAYS}-day window ended on {longDate(gfe.deadline)}. You can still dispute with the provider
+              directly.
+            </p>
           )}
           {gfe.status === "insured" && (
-            <p className="mt-1">This federal process is for uninsured or self-pay patients. With insurance, appeal through your plan.</p>
+            <p>This federal review is for people without insurance. If you have insurance, appeal through your plan.</p>
           )}
         </div>
       )}
-      <p className="text-xs text-slate-500">
-        Rules: billed ≥ $400 above the estimate, filed within 120 days of the bill date, $25 fee. Source:{" "}
-        <a className="underline" href={PPDR_SOURCE_URL} target="_blank" rel="noopener noreferrer">
+      <p className="text-xs leading-relaxed text-slate-400">
+        Rules: bill {threshold}+ above the estimate, ask within {PPDR_WINDOW_DAYS} days of the bill date, ${PPDR_FEE} fee.
+        Source:{" "}
+        <a className="underline hover:text-slate-600" href={PPDR_SOURCE_URL} target="_blank" rel="noopener noreferrer">
           CMS — Dispute a medical bill
         </a>
         . Not added to the amount you can dispute.

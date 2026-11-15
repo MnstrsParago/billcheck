@@ -64,16 +64,16 @@ export function LetterBox({
     setTimeout(() => setCopied("idle"), 2000);
   };
   return (
-    <section aria-labelledby={`${id}-title`} data-tour={id} className="scroll-mt-20 rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h3 id={`${id}-title`} className="font-semibold text-slate-900">
+    <section aria-labelledby={`${id}-title`} data-tour={id} className="scroll-mt-20 rounded-3xl bg-slate-50 p-5 sm:p-7">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h3 id={`${id}-title`} className="text-lg font-semibold tracking-tight text-slate-900">
             {title}
           </h3>
-          <p className="text-sm text-slate-600">{description}</p>
+          <p className="mt-1 text-base text-slate-600">{description}</p>
         </div>
-        <div className="flex shrink-0 gap-2">
-          <Button variant="secondary" size="sm" onClick={onCopy}>
+        <div className="flex shrink-0 flex-wrap gap-2">
+          <Button variant="primary" size="sm" onClick={onCopy}>
             {copied === "ok" ? "Copied ✓" : copied === "fail" ? "Copy failed" : "Copy"}
           </Button>
           <Button variant="secondary" size="sm" onClick={() => downloadText(text, filename)}>
@@ -88,11 +88,11 @@ export function LetterBox({
         id={`${id}-text`}
         readOnly
         value={text}
-        rows={14}
-        className="mt-3 block w-full resize-y rounded-lg border border-slate-200 bg-slate-50 p-3 font-mono text-xs leading-relaxed text-slate-800"
+        rows={12}
+        className="mt-4 block w-full resize-y rounded-2xl bg-white p-4 font-mono text-[13px] leading-relaxed text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
       />
-      <p className="mt-2 text-xs text-slate-500">
-        Replace the [bracketed] placeholders before sending. Send by certified mail or the hospital&apos;s billing portal and keep a copy.
+      <p className="mt-3 text-sm text-slate-500">
+        Fill in the [brackets] first. Send it by certified mail or through the hospital&apos;s billing website, and keep a copy.
       </p>
     </section>
   );

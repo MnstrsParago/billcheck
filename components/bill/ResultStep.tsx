@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatUSD } from "@/lib/audit";
 import { buildCharityLetter, buildDisputeLetter, buildPpdrRequest, canBuildCharityLetter, letterFilename } from "@/lib/letters";
-import { checkGfe, GFE_LABEL, type GfeInput } from "@/lib/audit/gfe";
+import { checkGfe, type GfeInput } from "@/lib/audit/gfe";
 import { useNow } from "@/lib/tracker/clock";
 import { isTourActive } from "@/components/tour/JudgeTour";
 import { setPro, usePro } from "@/lib/pro";
@@ -12,14 +12,16 @@ import { createDispute } from "@/lib/tracker/store";
 import type { AuditResult, BillLine, HouseholdInput } from "@/lib/types";
 import { useCodeStats } from "@/components/outcomes/FindingOutcomeStats";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import { ProBadge } from "@/components/ui/ProBadge";
-import { CharityCard, CHARITY_LABEL } from "./CharityCard";
+import { CharityCard } from "./CharityCard";
 import { CoverageNote } from "./CoverageNote";
 import { FindingItem } from "./FindingItem";
 import { GfeCard } from "./GfeCard";
 import { LetterBox } from "./LetterBox";
 import { Paywall, PAYWALL_ID } from "./Paywall";
+
+/** Whole dollars for headline amounts ("$5,943"). */
+const usd0 = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
 
 function scrollToPaywall() {
   const el = document.getElementById(PAYWALL_ID);
@@ -91,69 +93,55 @@ export function ResultStep({
       createDispute({ provider: provider.trim(), state: hospitalState || null, billTotal, findings, demo, ...(ppdr ? { ppdr } : {}) });
       router.push("/tracker");
     } catch {
-      setStartError("Couldn't save the dispute in this browser (storage may be blocked).");
+      setStartError("We couldn't save the dispute in this browser. Storage may be blocked.");
     }
   };
 
   const upgrade = () => setPro(true);
   const n = findings.length;
+  const name = provider.trim();
+  const fromWhom = name ? ` from ${name}` : "";
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="min-w-0">
-          <h1 className="flex items-center gap-2 text-xl font-semibold tracking-tight sm:text-2xl">
+    <div className="space-y-14 sm:space-y-20">
+      <header>
+        <div className="flex items-center justify-between gap-3">
+          <p className="flex min-w-0 items-center gap-2 text-base font-medium text-slate-500">
             Your bill check <ProBadge />
-          </h1>
-          <p className="truncate text-sm text-slate-500">
-            {provider.trim() || "Unknown provider"} · {lines.length} line{lines.length === 1 ? "" : "s"} · bill total{" "}
-            {formatUSD(billTotal)}
           </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="secondary" size="sm" onClick={onEditLines}>
-            Edit lines
-          </Button>
-          <Button variant="ghost" size="sm" data-tour="new-bill" onClick={onNewBill}>
-            New bill
-          </Button>
-        </div>
-      </div>
-
-      <Card className="text-center sm:text-left">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-sm font-medium text-slate-500">
-              {n === 0 ? "No issues found" : `${n} possible issue${n === 1 ? "" : "s"} found`}
-            </p>
-            <p className="mt-1 text-4xl font-bold tracking-tight tabular-nums text-emerald-700 sm:text-5xl">
-              {formatUSD(totalDisputable)}
-            </p>
-            <p className="mt-1 text-base font-medium text-slate-800">you can dispute</p>
-          </div>
-          <div className="text-sm text-slate-600 sm:text-right">
-            <p>
-              {billTotal > 0 ? `${Math.round((totalDisputable / billTotal) * 100)}% of the ${formatUSD(billTotal)} bill` : null}
-            </p>
-            <p>
-              Charity care: <strong>{CHARITY_LABEL[charity.status]}</strong>
-            </p>
-            <p>
-              Good Faith Estimate: <strong>{GFE_LABEL[gfe.status]}</strong>
-            </p>
+          <div className="flex shrink-0 gap-1">
+            <Button variant="ghost" size="sm" onClick={onEditLines}>
+              Edit lines
+            </Button>
+            <Button variant="ghost" size="sm" data-tour="new-bill" onClick={onNewBill}>
+              New bill
+            </Button>
           </div>
         </div>
-        {n === 0 && (
-          <p className="mt-4 text-left text-sm text-slate-600">
-            We found no possible duplicates and no prices above 3× the Medicare reference in the lines we could check.
-            That doesn&apos;t mean the bill is right — see what we could check below, and the charity care estimate.
-          </p>
+        {n > 0 ? (
+          <>
+            <h1 className="mt-6 text-6xl font-bold tracking-tight tabular-nums text-emerald-600 sm:text-8xl">
+              {usd0(totalDisputable)}
+            </h1>
+            <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">you can dispute</p>
+            <p className="mt-4 max-w-xl text-lg text-slate-600">
+              We found {n} problem{n === 1 ? "" : "s"} on your {usd0(billTotal)} bill{fromWhom}.
+            </p>
+          </>
+        ) : (
+          <>
+            <h1 className="mt-6 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">No problems found</h1>
+            <p className="mt-4 max-w-xl text-lg text-slate-600">
+              We checked your {usd0(billTotal)} bill{fromWhom} and found nothing billed twice and no price far above what
+              Medicare pays. That doesn&apos;t prove the bill is right. You may still get free or cheaper care — see below.
+            </p>
+          </>
         )}
-      </Card>
+      </header>
 
       {n > 0 && (
-        <section aria-labelledby="findings-title" data-tour="findings" className="scroll-mt-20 space-y-3">
-          <h2 id="findings-title" className="text-base font-semibold">
+        <section aria-labelledby="findings-title" data-tour="findings" className="scroll-mt-20 space-y-5">
+          <h2 id="findings-title" className="text-3xl font-bold tracking-tight text-slate-900">
             What we found
           </h2>
           <ol className="space-y-3">
@@ -169,7 +157,7 @@ export function ResultStep({
                   stats={f.cpt ? stats?.get(f.cpt.trim().toUpperCase()) : undefined}
                   duplicateOf={
                     orig
-                      ? `${orig.cpt ?? "line"} ${orig.description} on ${orig.dateOfService ?? "the same date"}, ${formatUSD(orig.charge)}`
+                      ? `${orig.description}${orig.cpt ? ` (code ${orig.cpt})` : ""} on ${orig.dateOfService ?? "the same date"}, ${formatUSD(orig.charge)}`
                       : undefined
                   }
                   onUnlock={scrollToPaywall}
@@ -180,48 +168,39 @@ export function ResultStep({
         </section>
       )}
 
-      <div className="grid gap-5 lg:grid-cols-2">
-        <CharityCard charity={charity} household={household} onHousehold={onHousehold} />
-        <GfeCard gfe={gfe} input={gfeInput} onInput={onGfe} />
-      </div>
-      <CoverageNote lineStatus={lineStatus} lines={lines} />
-
       {!pro ? (
         <Paywall disputable={totalDisputable} onUpgrade={upgrade} />
       ) : (
-        <section aria-labelledby="pro-title" className="space-y-4">
-          <div className="flex items-center gap-2">
-            <h2 id="pro-title" className="text-base font-semibold">
-              Your next steps
-            </h2>
-            <ProBadge />
-          </div>
+        <section aria-labelledby="pro-title" className="space-y-5">
+          <h2 id="pro-title" className="flex flex-wrap items-center gap-3 text-3xl font-bold tracking-tight text-slate-900">
+            Your next steps <ProBadge />
+          </h2>
 
           {(n > 0 || ppdr) && (
-            <Card className="flex flex-col gap-3 border-emerald-200 bg-emerald-50/60 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-5 rounded-3xl bg-emerald-50 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-7">
               <div>
-                <p className="font-medium text-slate-900">Track this dispute</p>
-                <p className="text-sm text-slate-600">
-                  Adds {formatUSD(totalDisputable)} to your tracker with a day-30 follow-up and day-60 escalation
-                  {ppdr ? ", plus the federal dispute deadline" : ""}.
+                <p className="text-lg font-semibold tracking-tight text-slate-900">Track your dispute</p>
+                <p className="mt-1 text-base text-slate-600">
+                  We&apos;ll save {usd0(totalDisputable)} to your tracker and remind you to follow up after 30 days, and again
+                  after 60 days if needed{ppdr ? ". We'll also track the federal review deadline" : ""}.
                 </p>
                 {startError && (
-                  <p className="mt-1 text-sm text-rose-600" role="alert">
+                  <p className="mt-2 text-sm text-rose-600" role="alert">
                     {startError}
                   </p>
                 )}
               </div>
-              <Button size="lg" data-tour="start-dispute" onClick={startDispute}>
+              <Button size="lg" className="shrink-0" data-tour="start-dispute" onClick={startDispute}>
                 Start dispute →
               </Button>
-            </Card>
+            </div>
           )}
 
           {disputeLetter && (
             <LetterBox
               id="dispute-letter"
-              title="Dispute letter"
-              description={`Lists all ${n} finding${n === 1 ? "" : "s"} with CPT codes and amounts, and asks for an itemized review, a corrected bill and a hold on collections.`}
+              title="Letter to the hospital"
+              description={`Lists the ${n} problem${n === 1 ? "" : "s"} with codes and amounts, and asks for a corrected bill and a pause on collections.`}
               text={disputeLetter}
               filename={letterFilename("dispute", provider)}
             />
@@ -230,8 +209,8 @@ export function ResultStep({
           {ppdrText && (
             <LetterBox
               id="ppdr-request"
-              title="Federal Good Faith Estimate dispute — request text"
-              description="Everything the CMS patient-provider dispute form asks for: the estimate, the bill, the difference and your request. Submit it at nsa-idr.cms.gov/billdisputes with the $25 fee."
+              title="Request for a federal review"
+              description="Everything the government form asks for: the estimate, the bill and the difference. Submit it at nsa-idr.cms.gov/billdisputes and pay the $25 fee."
               text={ppdrText}
               filename={letterFilename("ppdr", provider)}
             />
@@ -240,25 +219,38 @@ export function ResultStep({
           {charityLetter ? (
             <LetterBox
               id="charity-letter"
-              title="Charity care request"
-              description="Asks the hospital's financial assistance office for its FAP application and a discount under IRS §501(r)."
+              title="Request for free or cheaper care"
+              description="Asks the hospital's financial help office for its application form and a discount on your bill."
               text={charityLetter}
               filename={letterFilename("charity", provider)}
             />
           ) : (
-            <p className="rounded-lg border border-dashed border-slate-300 bg-white p-3 text-sm text-slate-600">
-              Enter household size and income in the charity care card above to generate a charity care request letter.
+            <p className="text-base text-slate-500">
+              Add your household size and income under &quot;Free or cheaper care&quot; below to get a letter asking for a
+              discount.
             </p>
           )}
 
-          <p className="text-xs text-slate-500">
-            Pro is unlocked in demo mode — no real charge.{" "}
+          <p className="text-sm text-slate-500">
+            Pro is unlocked as a demo — no real charge.{" "}
             <button type="button" className="underline hover:text-slate-700" onClick={() => setPro(false)}>
               Lock again
             </button>
           </p>
         </section>
       )}
+
+      <section aria-labelledby="more-title" className="space-y-5">
+        <div>
+          <h2 id="more-title" className="text-3xl font-bold tracking-tight text-slate-900">
+            More ways to save
+          </h2>
+          <p className="mt-2 text-base text-slate-600">These can lower your bill even if every charge is correct.</p>
+        </div>
+        <CharityCard charity={charity} household={household} onHousehold={onHousehold} />
+        <GfeCard gfe={gfe} input={gfeInput} onInput={onGfe} />
+        <CoverageNote lineStatus={lineStatus} lines={lines} />
+      </section>
     </div>
   );
 }

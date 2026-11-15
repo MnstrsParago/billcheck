@@ -2,37 +2,36 @@
 
 import { useEffect, useRef, useState } from "react";
 import { MAX_UPLOAD_FILES, prepareUploads, type UploadFile } from "@/lib/upload";
-import { Landing } from "./Landing";
-import { SAMPLES } from "@/lib/samples";
 import type { HouseholdInput } from "@/lib/types";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import { inputClass } from "@/components/ui/Field";
-import { HouseholdFields } from "./HouseholdFields";
+import { Landing } from "./Landing";
 import { SummaryBillRequest } from "./SummaryBillRequest";
 
 const PROGRESS = [
   "Reading your bill…",
-  "Finding each line item, CPT code and charge…",
-  "Checking dates, units and totals…",
-  "Almost done — structuring the lines for review…",
+  "Finding every charge…",
+  "Checking dates and amounts…",
+  "Almost done…",
 ];
 
 export const MAX_TEXT = 40000;
 
-function Progress() {
+function Progress({ onCancel }: { onCancel: () => void }) {
   const [sec, setSec] = useState(0);
   useEffect(() => {
     const t = setInterval(() => setSec((s) => s + 1), 1000);
     return () => clearInterval(t);
   }, []);
-  const msg = PROGRESS[Math.min(PROGRESS.length - 1, Math.floor(sec / 7))];
+  const msg = PROGRESS[Math.min(PROGRESS.length - 1, Math.floor(sec / 5))];
   return (
-    <div role="status" aria-live="polite" className="flex items-center gap-3 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-900">
-      <span className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" aria-hidden />
-      <span>
-        {msg} <span className="text-emerald-700/70">({sec}s — this usually takes 10–30 seconds)</span>
-      </span>
+    <div role="status" aria-live="polite" className="flex flex-col items-center gap-3 py-6 text-center">
+      <span className="h-8 w-8 animate-spin rounded-full border-[3px] border-emerald-600 border-t-transparent" aria-hidden />
+      <p className="text-lg font-medium text-slate-900">{msg}</p>
+      <p className="text-sm text-slate-500">This usually takes 10–30 seconds.</p>
+      <button type="button" onClick={onCancel} className="text-sm text-slate-500 underline-offset-4 hover:underline">
+        Cancel
+      </button>
     </div>
   );
 }
@@ -58,7 +57,7 @@ function UploadZone({
     try {
       onFiles(await prepareUploads(files, Array.from(list)));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not read that file.");
+      setError(e instanceof Error ? e.message : "We couldn't read that file.");
     } finally {
       setBusy(false);
       if (inputRef.current) inputRef.current.value = "";
@@ -66,8 +65,9 @@ function UploadZone({
   };
 
   return (
-    <div className="space-y-2">
-      <div
+    <div className="space-y-3">
+      <label
+        htmlFor="bill-files"
         onDragOver={(e) => {
           e.preventDefault();
           setDrag(true);
@@ -78,12 +78,17 @@ function UploadZone({
           setDrag(false);
           if (!disabled) void add(e.dataTransfer.files);
         }}
-        className={`flex flex-col items-center gap-2 rounded-xl border-2 border-dashed p-5 text-center transition ${
-          drag ? "border-emerald-500 bg-emerald-50" : "border-slate-300 bg-slate-50"
-        }`}
+        className={`flex cursor-pointer flex-col items-center gap-3 rounded-3xl px-6 py-10 text-center transition sm:py-14 ${
+          drag ? "bg-emerald-50 ring-2 ring-emerald-500" : "bg-slate-50 hover:bg-slate-100"
+        } ${disabled || busy ? "pointer-events-none opacity-60" : ""}`}
       >
-        <p className="font-medium text-slate-800">Upload your itemized bill</p>
-        <p className="text-sm text-slate-500">PDF or photos of each page (JPEG/PNG), up to {MAX_UPLOAD_FILES} pages</p>
+        <span aria-hidden className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-2xl shadow-sm">
+          ↑
+        </span>
+        <span className="text-lg font-semibold text-slate-900">
+          {busy ? "Preparing…" : files.length ? "Add more pages" : "Upload your bill"}
+        </span>
+        <span className="text-sm text-slate-500">PDF or photos of each page · up to {MAX_UPLOAD_FILES} pages</span>
         <input
           ref={inputRef}
           id="bill-files"
@@ -94,31 +99,22 @@ function UploadZone({
           disabled={disabled || busy}
           onChange={(e) => void add(e.target.files)}
         />
-        <label
-          htmlFor="bill-files"
-          className={`inline-flex cursor-pointer items-center rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 ${
-            disabled || busy ? "pointer-events-none opacity-50" : ""
-          }`}
-        >
-          {busy ? "Preparing…" : files.length ? "Add more pages" : "Choose PDF or photos"}
-        </label>
-      </div>
+      </label>
       {error ? (
-        <p role="alert" className="text-sm text-rose-600">
+        <p role="alert" className="text-center text-sm text-rose-600">
           {error}
         </p>
       ) : null}
       {files.length ? (
-        <ul className="space-y-1">
+        <ul className="space-y-2">
           {files.map((f, i) => (
-            <li key={`${f.name}-${i}`} className="flex items-center justify-between gap-2 rounded-lg bg-white px-3 py-2 text-sm ring-1 ring-slate-200">
-              <span className="min-w-0 truncate">
-                {f.mediaType === "application/pdf" ? "📄" : "🖼️"} {f.name}{" "}
-                <span className="text-slate-400">({f.sizeKb} KB)</span>
+            <li key={`${f.name}-${i}`} className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm">
+              <span className="min-w-0 truncate text-slate-800">
+                {f.mediaType === "application/pdf" ? "📄" : "🖼️"} {f.name}
               </span>
               <button
                 type="button"
-                className="shrink-0 text-slate-500 hover:text-rose-600"
+                className="shrink-0 text-slate-400 hover:text-rose-600"
                 aria-label={`Remove ${f.name}`}
                 disabled={disabled}
                 onClick={() => onFiles(files.filter((_, j) => j !== i))}
@@ -138,11 +134,9 @@ export function InputStep({
   onFiles,
   onTour,
   text,
-  household,
   loading,
   onText,
-  onHousehold,
-  onSample,
+  onTrySample,
   onSubmit,
   onManual,
   onCancel,
@@ -155,83 +149,107 @@ export function InputStep({
   loading: boolean;
   onText: (t: string) => void;
   onHousehold: (h: HouseholdInput) => void;
-  onSample: (id: "A" | "B") => void;
+  /** Load a sample bill and check it right away. */
+  onTrySample: (id: "A" | "B") => void;
   onSubmit: () => void;
   onManual: () => void;
   onCancel: () => void;
 }) {
-  const hasHousehold = household.annualIncome !== null || household.householdSize !== null || household.state !== null;
+  const [pasteOpen, setPasteOpen] = useState(text.trim().length > 0);
   const tooLong = text.length > MAX_TEXT;
+  const ready = files.length > 0 || (text.trim().length > 0 && !tooLong);
+
   return (
-    <div className="space-y-6">
-      <Landing onTour={loading ? undefined : onTour} />
-
-      <Card className="scroll-mt-20 space-y-4" id="check-form">
-        <UploadZone files={files} disabled={loading} onFiles={onFiles} />
-        <div className="flex items-center gap-3 text-xs uppercase tracking-wide text-slate-400" aria-hidden>
-          <span className="h-px flex-1 bg-slate-200" /> or paste text <span className="h-px flex-1 bg-slate-200" />
-        </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <label htmlFor="bill-text" className="text-sm font-medium text-slate-700">
-            Paste the bill text
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {SAMPLES.map((s) => (
-              <Button key={s.id} variant="secondary" size="sm" disabled={loading} onClick={() => onSample(s.id)} title={s.label} data-tour={`sample-${s.id}`}>
-                Try Sample {s.id} ({s.id === "A" ? "ER visit" : "outpatient"})
-              </Button>
-            ))}
-          </div>
-        </div>
-        <textarea
-          id="bill-text"
-          rows={files.length ? 4 : 10}
-          className={`${inputClass} font-mono text-xs sm:text-sm`}
-          placeholder={"Date | CPT | Description | Units | Charge\n03/14/2026 | 70450 | CT head without contrast | 1 | $1,980.00\n…"}
-          value={text}
-          disabled={loading || files.length > 0}
-          onChange={(e) => onText(e.target.value)}
-          aria-describedby="bill-text-hint"
-        />
-        <p id="bill-text-hint" className={`text-xs ${tooLong ? "text-rose-600" : "text-slate-500"}`}>
-          {tooLong
-            ? `That's ${text.length.toLocaleString()} characters — please trim to ${MAX_TEXT.toLocaleString()} (just the line items are enough).`
-            : files.length
-              ? "Your uploaded pages will be read instead of this text. Remove the files to paste text."
-              : "Copy the text from your itemized statement (with dates, CPT codes and charges). Remove your name and account number if you like — we don't need them."}
-        </p>
-
-        <details className="group rounded-lg border border-slate-200 p-3" open={hasHousehold || undefined}>
-          <summary className="cursor-pointer select-none text-sm font-medium text-slate-700">
-            Charity care check <span className="font-normal text-slate-500">(optional)</span>
-          </summary>
-          <p className="mb-3 mt-2 text-xs text-slate-500">
-            Nonprofit hospitals must offer financial assistance. We compare your income with the 2026 federal poverty
-            guidelines. Nothing leaves your browser.
+    <div className="space-y-24 sm:space-y-32">
+      {/* First screen: the problem, the upload, a sample. */}
+      <section id="check-form" className="mx-auto max-w-2xl scroll-mt-24 space-y-8 pt-2 sm:pt-8">
+        <div className="space-y-4 text-center">
+          <h1 className="text-[2.5rem] font-semibold leading-[1.05] tracking-tight text-slate-900 sm:text-6xl">
+            Hospital bills are often wrong.
+          </h1>
+          <p className="text-lg text-slate-500 sm:text-xl">
+            Upload your itemized bill. In about a minute you&apos;ll see what you shouldn&apos;t pay — and how to get it
+            fixed.
           </p>
-          <HouseholdFields value={household} onChange={onHousehold} idPrefix="in" />
-        </details>
-
-        <SummaryBillRequest />
+        </div>
 
         {loading ? (
-          <div className="space-y-2">
-            <Progress />
-            <Button variant="ghost" size="sm" onClick={onCancel}>
-              Cancel
-            </Button>
-          </div>
+          <Progress onCancel={onCancel} />
         ) : (
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <Button size="lg" data-tour="check" onClick={onSubmit} disabled={files.length === 0 && (!text.trim() || tooLong)}>
-              Check my bill
-            </Button>
-            <Button variant="ghost" onClick={onManual}>
-              Enter lines manually instead
-            </Button>
-          </div>
+          <>
+            <UploadZone files={files} disabled={loading} onFiles={onFiles} />
+
+            {pasteOpen && files.length === 0 ? (
+              <div className="space-y-2">
+                <label htmlFor="bill-text" className="text-sm font-medium text-slate-700">
+                  Paste the text of your bill
+                </label>
+                <textarea
+                  id="bill-text"
+                  rows={7}
+                  className={`${inputClass} font-mono text-sm`}
+                  placeholder={"03/14/2026  70450  CT head  1  $1,980.00\n…"}
+                  value={text}
+                  onChange={(e) => onText(e.target.value)}
+                />
+                {tooLong ? (
+                  <p className="text-sm text-rose-600">
+                    That&apos;s too long. Please paste only the list of charges (max {MAX_TEXT.toLocaleString()} characters).
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+
+            <div className="flex flex-col items-center gap-4">
+              {ready ? (
+                <Button size="lg" data-tour="check" onClick={onSubmit} className="w-full sm:w-auto">
+                  Check my bill
+                </Button>
+              ) : (
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  data-tour="sample-A"
+                  onClick={() => onTrySample("A")}
+                  className="w-full sm:w-auto"
+                >
+                  Try a sample bill
+                </Button>
+              )}
+              <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-slate-500">
+                {files.length === 0 && !pasteOpen ? (
+                  <button type="button" className="underline-offset-4 hover:text-slate-900 hover:underline" onClick={() => setPasteOpen(true)}>
+                    Paste text instead
+                  </button>
+                ) : null}
+                {ready ? (
+                  <button
+                    type="button"
+                    data-tour="sample-A"
+                    className="underline-offset-4 hover:text-slate-900 hover:underline"
+                    onClick={() => onTrySample("A")}
+                  >
+                    Try a sample bill
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          </>
         )}
-      </Card>
+      </section>
+
+      {/* Below the first screen. */}
+      <Landing onTour={loading ? undefined : onTour} onSampleB={() => onTrySample("B")} />
+
+      <section className="mx-auto max-w-2xl space-y-6">
+        <SummaryBillRequest />
+        <p className="text-center text-sm text-slate-500">
+          No file and no text?{" "}
+          <button type="button" className="font-medium text-slate-900 underline-offset-4 hover:underline" onClick={onManual}>
+            Type the charges yourself
+          </button>
+        </p>
+      </section>
     </div>
   );
 }
