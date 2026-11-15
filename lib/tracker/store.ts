@@ -161,6 +161,7 @@ export type LineResolution = { finalPrice: number; argument: WinningArgument };
 /** Close as Resolved. finalPrice is clamped to [0, originalPrice]. */
 export function resolveDispute(id: string, resolutions: Record<string, LineResolution>): Dispute | null {
   return updateDispute(id, (d) => {
+    if (d.status === "resolved" || d.status === "escalated") return d; // already closed (double click)
     const lines = d.lines.map((l) => {
       const r = resolutions[l.lineId];
       const raw = r && Number.isFinite(r.finalPrice) ? r.finalPrice : l.originalPrice;
@@ -184,6 +185,7 @@ export function resolveDispute(id: string, resolutions: Record<string, LineResol
 /** Close as Escalated: provider did not concede, final = original. */
 export function escalateDispute(id: string): Dispute | null {
   return updateDispute(id, (d) => {
+    if (d.status === "resolved" || d.status === "escalated") return d;
     const at = getNow().toISOString();
     return {
       ...d,

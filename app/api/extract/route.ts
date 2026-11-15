@@ -5,7 +5,7 @@ import { ExtractError, extractWithClaude, isConfigured } from "@/lib/extract/cla
 import { checkRateLimit, clientIp } from "@/lib/extract/rateLimit";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 120;
 export const dynamic = "force-dynamic";
 
 function json(body: ExtractResponse, status = 200) {
@@ -36,6 +36,16 @@ export async function POST(req: Request) {
 
   try {
     const raw = await extractWithClaude(parsed.data);
+    if (raw.isMedicalBill === false) {
+      return json(
+        {
+          ok: false,
+          error:
+            "This doesn't look like a medical bill. Please upload the itemized bill from your hospital or doctor (a PDF or a clear photo of each page).",
+        },
+        422,
+      );
+    }
     const { bill, dropped } = normalizeBill(raw);
     return json({ ok: true, bill, dropped });
   } catch (err) {

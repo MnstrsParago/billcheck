@@ -28,7 +28,7 @@ function Progress({ onCancel }: { onCancel: () => void }) {
     <div role="status" aria-live="polite" className="flex flex-col items-center gap-3 py-6 text-center">
       <span className="h-8 w-8 animate-spin rounded-full border-[3px] border-emerald-600 border-t-transparent" aria-hidden />
       <p className="text-lg font-medium text-slate-900">{msg}</p>
-      <p className="text-sm text-slate-500">This usually takes 10–30 seconds.</p>
+      <p className="text-sm text-slate-500">This usually takes 10–30 seconds. Long bills can take up to 2 minutes.</p>
       <button type="button" onClick={onCancel} className="text-sm text-slate-500 underline-offset-4 hover:underline">
         Cancel
       </button>
@@ -140,6 +140,7 @@ export function InputStep({
   onSubmit,
   onManual,
   onCancel,
+  error,
 }: {
   files: UploadFile[];
   onFiles: (f: UploadFile[]) => void;
@@ -154,6 +155,8 @@ export function InputStep({
   onSubmit: () => void;
   onManual: () => void;
   onCancel: () => void;
+  /** A problem with what was sent (not a medical bill, too large…), shown on the first screen. */
+  error?: string | null;
 }) {
   const [pasteOpen, setPasteOpen] = useState(text.trim().length > 0);
   const tooLong = text.length > MAX_TEXT;
@@ -177,6 +180,11 @@ export function InputStep({
           <Progress onCancel={onCancel} />
         ) : (
           <>
+            {error ? (
+              <p role="alert" className="rounded-2xl bg-rose-50 px-5 py-4 text-center text-rose-700">
+                {error}
+              </p>
+            ) : null}
             <UploadZone files={files} disabled={loading} onFiles={onFiles} />
 
             {pasteOpen && files.length === 0 ? (

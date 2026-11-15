@@ -114,4 +114,13 @@ describe("store", () => {
     expect(getDispute(d.id)?.ppdr).toEqual(ppdr);
     expect(markPpdrFiled(d.id)!.events.some((e) => e.type === "ppdr_filed")).toBe(true);
   });
+
+  it("closing twice does nothing the second time (double click)", () => {
+    const d = createDispute({ provider: "Mercy", state: "TX", billTotal: 3000, findings: [f("duplicate", "l2", 800, 800)] });
+    const first = resolveDispute(d.id, { l2: { finalPrice: 0, argument: "duplicate" } })!;
+    const second = resolveDispute(d.id, { l2: { finalPrice: 500, argument: "duplicate" } })!;
+    expect(second.savedAmount).toBe(first.savedAmount);
+    expect(second.events.filter((e) => e.type === "resolved")).toHaveLength(1);
+    expect(escalateDispute(d.id)!.status).toBe("resolved");
+  });
 });

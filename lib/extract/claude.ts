@@ -19,7 +19,7 @@ export class ExtractError extends Error {
 let client: Anthropic | null = null;
 function getClient(): Anthropic {
   // Reads ANTHROPIC_API_KEY from the environment. Never hardcode the key.
-  client ??= new Anthropic({ timeout: 55_000, maxRetries: 0 });
+  client ??= new Anthropic({ timeout: 110_000, maxRetries: 0 });
   return client;
 }
 

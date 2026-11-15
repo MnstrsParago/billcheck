@@ -21,7 +21,7 @@ import { InputStep } from "./InputStep";
 import { LinesStep } from "./LinesStep";
 import { ResultStep } from "./ResultStep";
 
-const EXTRACT_TIMEOUT_MS = 70_000;
+const EXTRACT_TIMEOUT_MS = 125_000;
 
 function errorFor(status: number, body: ExtractResponse | null): string {
   if (body && !body.ok && body.error) return body.error;
@@ -34,7 +34,8 @@ export function BillFlow() {
   const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [hydrated, setHydrated] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [filesState, setFiles] = useState<UploadFile[]>([]); // not persisted (too large for localStorage)
+  const [filesState, setFiles] = useState<UploadFile[]>([]);
+  const [inputError, setInputError] = useState<string | null>(null); // not persisted (too large for localStorage)
   const abortRef = useRef<AbortController | null>(null);
   const topRef = useRef<HTMLDivElement>(null);
 
@@ -71,6 +72,7 @@ export function BillFlow() {
     const text = override ? override.text : draft.text.trim();
     const files = override ? override.files : filesState;
     if (!text && files.length === 0) return;
+    setInputError(null);
     const payload = files.length
       ? { files: files.map((f) => ({ mediaType: f.mediaType, data: f.data })) }
       : { text };
@@ -131,6 +133,11 @@ export function BillFlow() {
       return;
     }
     const msg = networkError ?? errorFor(status, body);
+    // Problems with what the user sent (not a bill, too big, empty): stay on the first screen and say so.
+    if (!networkError && (status === 400 || status === 413 || status === 422)) {
+      setInputError(msg);
+      return;
+    }
     go({
       step: "lines",
       fromSample: files.length === 0 && SAMPLES.some((s) => s.text.trim() === text),
@@ -177,7 +184,11 @@ export function BillFlow() {
       ) : draft.step === "input" ? (
         <InputStep
           files={filesState}
-          onFiles={setFiles}
+          onFiles={(f) => {
+            setInputError(null);
+            setFiles(f);
+          }}
+          error={inputError}
           onTour={() => window.dispatchEvent(new Event(TOUR_START_EVENT))}
           text={draft.text}
           household={draft.household}

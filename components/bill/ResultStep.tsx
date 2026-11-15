@@ -1,9 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatUSD } from "@/lib/audit";
-import { buildCharityLetter, buildDisputeLetter, buildPpdrRequest, canBuildCharityLetter, letterFilename } from "@/lib/letters";
+import {
+  buildCharityLetter,
+  buildDisputeLetter,
+  buildItemizedRequest,
+  buildPpdrRequest,
+  canBuildCharityLetter,
+  letterFilename,
+} from "@/lib/letters";
 import { checkGfe, type GfeInput } from "@/lib/audit/gfe";
 import { useNow } from "@/lib/tracker/clock";
 import { isTourActive } from "@/components/tour/JudgeTour";
@@ -87,12 +94,16 @@ export function ResultStep({
     [pro, provider, charity, household.state, billTotal],
   );
 
+  const started = useRef(false);
   const startDispute = () => {
+    if (started.current) return; // a double click must not create two disputes
+    started.current = true;
     try {
       const demo = fromSample || isTourActive();
       createDispute({ provider: provider.trim(), state: hospitalState || null, billTotal, findings, demo, ...(ppdr ? { ppdr } : {}) });
       router.push("/tracker");
     } catch {
+      started.current = false;
       setStartError("We couldn't save the dispute in this browser. Storage may be blocked.");
     }
   };
@@ -138,6 +149,23 @@ export function ResultStep({
           </>
         )}
       </header>
+
+      {lines.length > 0 && lineStatus.filter((x) => x.status === "no_cpt").length * 2 >= lines.length && (
+        <section className="space-y-4 rounded-3xl bg-amber-50 p-5 sm:p-7">
+          <h2 className="text-xl font-semibold tracking-tight text-slate-900">Your bill has no billing codes</h2>
+          <p className="text-slate-700">
+            Most charges have no code (like “70450”), so we could only look for charges billed twice — we can&apos;t compare
+            prices with Medicare. Ask the hospital for an itemized bill with codes. Here is a letter you can send:
+          </p>
+          <LetterBox
+            id="itemized-request"
+            title="Request for an itemized bill"
+            description="Asks for every charge with its code, quantity and price."
+            text={buildItemizedRequest({ provider, billTotal })}
+            filename={letterFilename("itemized-request", provider)}
+          />
+        </section>
+      )}
 
       {n > 0 && (
         <section aria-labelledby="findings-title" data-tour="findings" className="scroll-mt-20 space-y-5">

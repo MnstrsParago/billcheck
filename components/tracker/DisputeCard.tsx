@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { Dispute, DisputeEvent, DisputeStatus } from "@/lib/types";
 import { shareOutcome } from "@/lib/outcomes/client";
 import { downloadIcs, downloadText } from "@/lib/tracker/ics";
@@ -125,13 +125,18 @@ export default function DisputeCard({ dispute: d, now }: { dispute: Dispute; now
     }
   }
 
+  const closing = useRef(false);
   function onResolve(r: Record<string, LineResolution>) {
+    if (closing.current || isClosed(d)) return; // double click on Save
+    closing.current = true;
     setResolving(false);
     void doShare(resolveDispute(d.id, r));
   }
 
   function onEscalate() {
+    if (closing.current || isClosed(d)) return;
     if (!window.confirm("Close this dispute as escalated? Final prices will stay as billed.")) return;
+    closing.current = true;
     void doShare(escalateDispute(d.id));
   }
 

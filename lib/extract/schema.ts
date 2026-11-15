@@ -57,6 +57,8 @@ export const LlmLineSchema = z.object({
 });
 
 export const LlmBillSchema = z.object({
+  /** false for anything that is not a medical/hospital bill (a store receipt, a photo of a cat, a blank page…). */
+  isMedicalBill: z.boolean(),
   provider: z.string().nullable(),
   providerState: z.string().nullable(),
   patientBalance: z.number().nullable(),

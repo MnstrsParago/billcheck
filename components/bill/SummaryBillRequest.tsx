@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { US_STATES } from "@/lib/audit/charity";
 import { buildItemizedRequest, letterFilename } from "@/lib/letters";
@@ -28,11 +28,14 @@ export function SummaryBillRequest() {
     [provider, billTotal, billDate],
   );
 
+  const tracking = useRef(false);
   const track = () => {
+    if (tracking.current) return; // ignore double clicks
     if (!provider.trim()) {
       setError("Add the hospital name first.");
       return;
     }
+    tracking.current = true;
     try {
       createDispute({
         provider: provider.trim(),
@@ -43,6 +46,7 @@ export function SummaryBillRequest() {
       });
       router.push("/tracker");
     } catch {
+      tracking.current = false;
       setError("Couldn't save the request in this browser (storage may be blocked).");
     }
   };
