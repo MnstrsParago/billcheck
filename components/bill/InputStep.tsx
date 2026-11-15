@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { inputClass } from "@/components/ui/Field";
 import { HouseholdFields } from "./HouseholdFields";
+import { SummaryBillRequest } from "./SummaryBillRequest";
 
 const PROGRESS = [
   "Reading your bill…",
@@ -210,6 +211,8 @@ export function InputStep({
           </p>
           <HouseholdFields value={household} onChange={onHousehold} idPrefix="in" />
         </details>
+
+        <SummaryBillRequest />
 
         {loading ? (
           <div className="space-y-2">

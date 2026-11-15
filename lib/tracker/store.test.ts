@@ -8,6 +8,8 @@ import {
   getDispute,
   listDisputes,
   markFollowUpSent,
+  markItemizedReceived,
+  markPpdrFiled,
   resolveDispute,
   savedSoFar,
 } from "./store";
@@ -95,5 +97,21 @@ describe("store", () => {
     expect(getDispute(a.id)!.status).toBe("resolved");
     deleteDispute(b.id);
     expect(listDisputes()).toHaveLength(1);
+  });
+
+  it("itemized-bill request: created without lines, closed on receipt with nothing to share", () => {
+    const d = createDispute({ provider: "Lakeview", state: "OH", billTotal: 2890, findings: [], kind: "itemized_request" });
+    expect(d).toMatchObject({ kind: "itemized_request", amountDisputed: 0, lines: [] });
+    const closed = markItemizedReceived(d.id)!;
+    expect(closed).toMatchObject({ status: "resolved", savedAmount: 0, outcomeShared: true });
+    expect(closed.events.at(-1)?.type).toBe("itemized_received");
+    expect(savedSoFar()).toBe(0);
+  });
+
+  it("stores the PPDR deadline and marks it filed", () => {
+    const ppdr = { gfeAmount: 1000, billDate: "2026-10-01", billed: 2000, difference: 1000, deadline: "2027-01-29" };
+    const d = createDispute({ provider: "Maple", state: "PA", billTotal: 2000, findings: [], ppdr });
+    expect(getDispute(d.id)?.ppdr).toEqual(ppdr);
+    expect(markPpdrFiled(d.id)!.events.some((e) => e.type === "ppdr_filed")).toBe(true);
   });
 });

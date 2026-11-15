@@ -30,6 +30,11 @@ bill text ─► /api/extract (LLM, server only, zod-validated JSON)
 - **(B) Price above the Medicare reference.** Physician-fee codes: flagged if charge per unit is more than 3× the 2026 national non-facility PFS rate; disputable amount = charge − 3 × rate × units. Codes with no PFS non-facility rate (e.g. ER visits 99281–99285 and other hospital facility services) are compared with the 2026 OPPS national unadjusted payment rate at a separate, more conservative 4× threshold, with its own disclaimer. Duplicates are not double-counted. Not covered: lab tests (Clinical Lab Fee Schedule) and codes priced in neither table.
 - **(C) Charity care.** %FPL = income ÷ HHS guideline for the household size and region (48 states + DC / Alaska / Hawaii). ≤200%: likely; 200–400%: possibly; >400%: not likely. Shown separately and never added to the disputable amount.
 
+- **(D) Good Faith Estimate (No Surprises Act).** For uninsured / self-pay patients: if the bill is $400 or more above the provider's Good Faith Estimate and the bill is dated within the last 120 days, BillCheck prepares the text for the federal patient-provider dispute resolution process ($25 fee) and puts the deadline in the tracker. Rules: [CMS — Dispute a medical bill](https://www.cms.gov/medical-bill-rights/help/dispute-a-bill). Shown separately; not added to the disputable amount.
+
+### Only a summary bill?
+BillCheck writes a request for the itemized bill (codes, units and charges for every line, the financial assistance policy, and a collections hold) and tracks it with a 14-day follow-up.
+
 ### Shared outcomes database
 When a dispute is closed (Resolved or Escalated), one anonymous row per disputed line is stored. Each row holds the hospital, state, CPT, original price, final price and the winning argument (duplicate / above Medicare / charity care). No names, account numbers or dates of service are stored. The result screen then shows "At this hospital, N people disputed this code, median reduction X%, winning argument: …", and `/hospitals` ranks hospitals by how often they lower disputed charges. Seed rows for fictional hospitals are marked **demo** in the database and in the UI. Real closures are written through the same path with `demo: false`.
 

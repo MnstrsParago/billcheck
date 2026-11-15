@@ -158,7 +158,11 @@ export default function DisputeCard({ dispute: d, now }: { dispute: Dispute; now
           </p>
         </div>
         <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ${BADGE[d.status]}`}>
-          {STATUS_LABEL[d.status]}
+          {itemized && d.status === "resolved"
+            ? "Bill received"
+            : itemized && d.status === "letter_sent"
+              ? "Requested"
+              : STATUS_LABEL[d.status]}
         </span>
       </header>
 
@@ -169,7 +173,7 @@ export default function DisputeCard({ dispute: d, now }: { dispute: Dispute; now
         </div>
         <div className="rounded-lg bg-slate-50 p-2">
           <dt className="text-[11px] text-slate-500">Disputed</dt>
-          <dd className="text-sm font-semibold text-slate-900">{usd(d.amountDisputed)}</dd>
+          <dd className="text-sm font-semibold text-slate-900">{itemized ? "—" : usd(d.amountDisputed)}</dd>
         </div>
         <div className="rounded-lg bg-emerald-50 p-2">
           <dt className="text-[11px] text-slate-500">Saved</dt>
