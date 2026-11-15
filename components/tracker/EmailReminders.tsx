@@ -139,7 +139,7 @@ export default function EmailReminders({ dispute: d }: { dispute: Dispute }) {
         Demo: emails come from onboarding@resend.dev, Resend&apos;s free test sender. Your address is kept only in this
         browser and sent to Resend to deliver the emails; it is not stored in our database.
         {e && (e.followUp || e.escalation)
-          ? " Dates use the real calendar, not the demo clock. Closing the dispute cancels scheduled emails where possible."
+          ? " Dates use the real calendar, not the demo clock. Closing the dispute asks Resend to cancel scheduled emails; the demo key can only send, so already booked emails may still arrive."
           : ""}
       </p>
     </section>
