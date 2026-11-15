@@ -225,6 +225,7 @@ export function BillFlow() {
           gfeInput={draft.gfe}
           onGfe={(gfe) => patch({ gfe })}
           onEditLines={() => go({ step: "lines" })}
+          onTrySample={trySample}
           onNewBill={newBill}
         />
       ) : null}

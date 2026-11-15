@@ -37,9 +37,7 @@ export function GfeCard({ gfe, input, onInput }: { gfe: GfeResult; input: GfeInp
         <p className={`mt-1 text-base font-medium ${STATUS_COLOR[gfe.status]}`}>{GFE_LABEL[gfe.status]}</p>
       </div>
       <p className="text-base text-slate-600">
-        If you paid without insurance, the provider had to give you a written price estimate (a &quot;Good Faith
-        Estimate&quot;) before planned care. If the bill is {threshold} or more above it, a federal reviewer can decide
-        what you really owe.
+        No insurance? If the bill is {threshold}+ above your estimate, ask for a federal review.
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -84,40 +82,33 @@ export function GfeCard({ gfe, input, onInput }: { gfe: GfeResult; input: GfeInp
       ) : (
         <div className="space-y-1 rounded-2xl bg-white p-4 text-base text-slate-700">
           <p>
-            You were billed {formatUSD(gfe.billed)}. The estimate was {formatUSD(gfe.gfeAmount ?? 0)}. That&apos;s{" "}
             <strong className="font-semibold">
-              {diff >= 0 ? `${formatUSD(diff)} more` : `${formatUSD(-diff)} less`}
-            </strong>
-            .
+              {diff >= 0 ? `${formatUSD(diff)} above` : `${formatUSD(-diff)} below`}
+            </strong>{" "}
+            your estimate.
           </p>
           {gfe.status === "eligible" && gfe.deadline && (
             <p>
-              You can ask for a federal review until <strong className="font-semibold">{longDate(gfe.deadline)}</strong> (
-              {gfe.daysLeft} day{gfe.daysLeft === 1 ? "" : "s"} left). It costs ${PPDR_FEE}. While it&apos;s open, the
-              provider can&apos;t send your bill to collections.
+              Ask by <strong className="font-semibold">{longDate(gfe.deadline)}</strong> ({gfe.daysLeft} days left, $
+              {PPDR_FEE} fee).
             </p>
           )}
           {gfe.status === "below_threshold" && (
-            <p>The federal review is only for bills at least {threshold} above the estimate.</p>
+            <p>Needs to be {threshold}+ above the estimate.</p>
           )}
           {gfe.status === "deadline_passed" && gfe.deadline && (
-            <p>
-              The {PPDR_WINDOW_DAYS}-day window ended on {longDate(gfe.deadline)}. You can still dispute with the provider
-              directly.
-            </p>
+            <p>The {PPDR_WINDOW_DAYS}-day window ended {longDate(gfe.deadline)}.</p>
           )}
           {gfe.status === "insured" && (
-            <p>This federal review is for people without insurance. If you have insurance, appeal through your plan.</p>
+            <p>Only for people without insurance.</p>
           )}
         </div>
       )}
       <p className="text-xs leading-relaxed text-slate-400">
-        Rules: bill {threshold}+ above the estimate, ask within {PPDR_WINDOW_DAYS} days of the bill date, ${PPDR_FEE} fee.
         Source:{" "}
         <a className="underline hover:text-slate-600" href={PPDR_SOURCE_URL} target="_blank" rel="noopener noreferrer">
           CMS — Dispute a medical bill
         </a>
-        . Not added to the amount you can dispute.
       </p>
     </Card>
   );

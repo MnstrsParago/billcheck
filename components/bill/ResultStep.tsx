@@ -49,7 +49,9 @@ export function ResultStep({
   fromSample,
   onEditLines,
   onNewBill,
+  onTrySample,
 }: {
+  onTrySample: (id: "A" | "B") => void;
   fromSample: boolean;
   gfeInput: GfeInput;
   onGfe: (g: GfeInput) => void;
@@ -101,7 +103,12 @@ export function ResultStep({
     try {
       const demo = fromSample || isTourActive();
       createDispute({ provider: provider.trim(), state: hospitalState || null, billTotal, findings, demo, ...(ppdr ? { ppdr } : {}) });
-      router.push("/tracker");
+      try {
+        sessionStorage.setItem("bc.justStarted", "1");
+      } catch {
+        /* ignore */
+      }
+      router.push("/tracker?started=1");
     } catch {
       started.current = false;
       setStartError("We couldn't save the dispute in this browser. Storage may be blocked.");
@@ -125,18 +132,18 @@ export function ResultStep({
     <div className="space-y-14 sm:space-y-20">
       <header>
         <div className="flex items-center justify-between gap-3">
-          <p className="flex min-w-0 items-center gap-2 whitespace-nowrap text-base font-medium text-slate-500">
+          <p className="hidden min-w-0 items-center gap-2 whitespace-nowrap text-base font-medium text-slate-500 sm:flex">
             Your bill check
             <span className="hidden sm:inline-flex">
               <ProBadge />
             </span>
           </p>
-          <div className="flex shrink-0 gap-1">
-            <Button variant="ghost" size="sm" onClick={onEditLines}>
-              Edit lines
+          <div className="flex shrink-0 flex-wrap justify-end gap-2">
+            <Button variant="secondary" size="sm" data-tour="sample-A" onClick={() => onTrySample("A")}>
+              Try a sample bill
             </Button>
-            <Button variant="ghost" size="sm" data-tour="new-bill" onClick={onNewBill}>
-              New bill
+            <Button variant="secondary" size="sm" data-tour="new-bill" onClick={onNewBill}>
+              Start over
             </Button>
           </div>
         </div>
@@ -147,21 +154,26 @@ export function ResultStep({
             </h1>
             <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">you can dispute</p>
             <p className="mt-4 max-w-xl text-lg text-slate-600">
-              We found {n} problem{n === 1 ? "" : "s"} on your {usd0(billTotal)} bill{fromWhom}.
+              {n} problem{n === 1 ? "" : "s"} on your {usd0(billTotal)} bill{fromWhom}.{" "}
+              <button type="button" onClick={onEditLines} className="text-base text-slate-400 underline-offset-4 hover:text-slate-700 hover:underline">
+                Edit charges
+              </button>
             </p>
           </>
         ) : (
           <>
             <h1 className="mt-6 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">No problems found</h1>
             <p className="mt-4 max-w-xl text-lg text-slate-600">
-              We checked your {usd0(billTotal)} bill{fromWhom} and found nothing billed twice and no price far above what
-              Medicare pays. That doesn&apos;t prove the bill is right. You may still get free or cheaper care — see below.
+              Nothing billed twice, no price far above Medicare. Check “More ways to save” below.{" "}
+              <button type="button" onClick={onEditLines} className="text-base text-slate-400 underline-offset-4 hover:text-slate-700 hover:underline">
+                Edit charges
+              </button>
             </p>
           </>
         )}
         {noCodes ? (
           <p className="mt-3 text-base text-amber-800">
-            Your bill has no billing codes, so we could only look for charges billed twice. See “More ways to save” below.
+            No billing codes on this bill — see “More ways to save”.
           </p>
         ) : null}
       </header>
@@ -171,7 +183,7 @@ export function ResultStep({
           <h2 id="findings-title" className="text-3xl font-bold tracking-tight text-slate-900">
             What we found
           </h2>
-          <ol className="space-y-3">
+          <ol className="space-y-2">
             {findings.map((f, i) => {
               const orig = f.duplicateOfLineId ? lineById.get(f.duplicateOfLineId) : undefined;
               return (
@@ -217,7 +229,7 @@ export function ResultStep({
             <LetterBox
               id="dispute-letter"
               title="Letter to the hospital"
-              description={`Lists the ${n} problem${n === 1 ? "" : "s"} with codes and amounts, and asks for a corrected bill and a pause on collections.`}
+              description={`All ${n} problem${n === 1 ? "" : "s"} with codes and amounts.`}
               text={disputeLetter}
               filename={letterFilename("dispute", provider)}
             />
@@ -228,8 +240,7 @@ export function ResultStep({
               <div>
                 <p className="text-lg font-semibold tracking-tight text-slate-900">Track your dispute</p>
                 <p className="mt-1 text-base text-slate-600">
-                  We&apos;ll save {usd0(totalDisputable)} to your tracker and remind you to follow up after 30 days, and again
-                  after 60 days if needed{ppdr ? ". We'll also track the federal review deadline" : ""}.
+                  We remind you on day 30 and day 60.
                 </p>
                 {startError && (
                   <p className="mt-2 text-sm text-rose-600" role="alert">
@@ -250,7 +261,7 @@ export function ResultStep({
             <LetterBox
               id="ppdr-request"
               title="Request for a federal review"
-              description="Everything the government form asks for: the estimate, the bill and the difference. Submit it at nsa-idr.cms.gov/billdisputes and pay the $25 fee."
+              description="Submit at nsa-idr.cms.gov/billdisputes ($25 fee)."
               text={ppdrText}
               filename={letterFilename("ppdr", provider)}
             />
@@ -260,14 +271,13 @@ export function ResultStep({
             <LetterBox
               id="charity-letter"
               title="Request for free or cheaper care"
-              description="Asks the hospital's financial help office for its application form and a discount on your bill."
+              description="Asks the hospital for a discount based on your income."
               text={charityLetter}
               filename={letterFilename("charity", provider)}
             />
           ) : (
             <p className="text-base text-slate-500">
-              Add your household size and income under &quot;Free or cheaper care&quot; below to get a letter asking for a
-              discount.
+              Add your income in “More ways to save” for a discount letter.
             </p>
           )}
 
@@ -286,7 +296,7 @@ export function ResultStep({
         <summary className="cursor-pointer select-none list-none">
           <span className="text-xl font-semibold tracking-tight text-slate-900">More ways to save</span>
           <span className="mt-1 block text-base text-slate-600">
-            Free or cheaper care, a price estimate you were given, a bill with no codes.
+            Free care, price estimate, bills without codes.
           </span>
         </summary>
         <div className="mt-6 space-y-5">
@@ -294,13 +304,12 @@ export function ResultStep({
         <section className="space-y-4 rounded-3xl bg-white p-5 sm:p-7">
           <h2 className="text-xl font-semibold tracking-tight text-slate-900">Your bill has no billing codes</h2>
           <p className="text-slate-700">
-            Most charges have no code (like “70450”), so we could only look for charges billed twice — we can&apos;t compare
-            prices with Medicare. Ask the hospital for an itemized bill with codes. Here is a letter you can send:
+            Without codes we can&apos;t compare prices. Ask for a bill with codes:
           </p>
           <LetterBox
             id="itemized-request"
             title="Request for an itemized bill"
-            description="Asks for every charge with its code, quantity and price."
+            description="Asks for every charge with its code."
             text={buildItemizedRequest({ provider, billTotal })}
             filename={letterFilename("itemized-request", provider)}
           />

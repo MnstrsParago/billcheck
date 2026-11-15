@@ -91,9 +91,7 @@ export function LetterBox({
         rows={12}
         className="mt-4 block w-full resize-y rounded-2xl bg-white p-4 font-mono text-[13px] leading-relaxed text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
       />
-      <p className="mt-3 text-sm text-slate-500">
-        Fill in the [brackets] first. Send it by certified mail or through the hospital&apos;s billing website, and keep a copy.
-      </p>
+      <p className="mt-3 text-sm text-slate-500">Fill in the [brackets], then send it.</p>
     </section>
   );
 }

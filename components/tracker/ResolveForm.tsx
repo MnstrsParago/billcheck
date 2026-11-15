@@ -99,7 +99,7 @@ export default function ResolveForm({
         You saved: <span className="font-semibold text-emerald-700">{usd(Math.max(0, saved))}</span>
       </p>
       <p className="text-xs text-slate-500">
-        Anonymous result (hospital, state, CPT, prices, winning argument) is added to the shared outcomes database.
+        Saved anonymously to Hospital ratings.
       </p>
       <div className="flex gap-2">
         <button

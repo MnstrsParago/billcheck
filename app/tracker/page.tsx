@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import TrackerApp from "@/components/tracker/TrackerApp";
 
 export const metadata: Metadata = {
-  title: "Dispute tracker — BillCheck",
+  title: "My disputes — BillCheck",
 };
 
 export default function TrackerPage() {

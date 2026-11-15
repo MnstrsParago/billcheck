@@ -21,10 +21,10 @@ const STATUS_COLOR: Record<CharityStatus, string> = {
 };
 
 const PLAIN: Record<CharityStatus, string> = {
-  likely: "Your income is low enough that many hospitals give care for free or at a big discount. Ask for it.",
-  possibly: "Many hospitals give a partial discount at your income. It's worth asking.",
-  not_likely: "Your income is probably above most hospitals' limits. Some hospitals still help, so you can ask.",
-  not_checked: "Many hospitals must lower or cancel bills for people with low or middle income. Tell us your household size and income to see if you may qualify.",
+  likely: "Many hospitals give free or much cheaper care at your income.",
+  possibly: "You may get a partial discount. Ask.",
+  not_likely: "Probably above most limits, but you can still ask.",
+  not_checked: "Enter your household and income to check.",
 };
 
 /** Whole-number FPL percent for plain text ("180%"). */
@@ -49,7 +49,6 @@ export function CharityCard({
       <p className="text-base text-slate-600">{PLAIN[charity.status]}</p>
       {checked && charity.fplPercent !== null ? (
         <p className="text-sm text-slate-500">
-          A household of {charity.householdSize} with {formatUSD(charity.annualIncome ?? 0)} a year is at{" "}
           <span className="tabular-nums">{pct(charity.fplPercent)}</span> of the federal poverty line
           {charity.guideline !== null ? <> ({formatUSD(charity.guideline)})</> : null}.
         </p>
@@ -66,8 +65,8 @@ export function CharityCard({
           </div>
         </details>
       )}
-      <p className="text-xs leading-relaxed text-slate-400">
-        This is not added to the amount you can dispute. {CHARITY_NOTE}
+      <p className="text-xs text-slate-400" title={CHARITY_NOTE}>
+        Source: HHS 2026 poverty guidelines.
       </p>
     </Card>
   );

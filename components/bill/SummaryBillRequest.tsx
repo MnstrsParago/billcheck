@@ -44,7 +44,12 @@ export function SummaryBillRequest() {
         findings: [],
         kind: "itemized_request",
       });
-      router.push("/tracker");
+      try {
+        sessionStorage.setItem("bc.justStarted", "1");
+      } catch {
+        /* ignore */
+      }
+      router.push("/tracker?started=1");
     } catch {
       tracking.current = false;
       setError("Couldn't save the request in this browser (storage may be blocked).");
@@ -58,8 +63,7 @@ export function SummaryBillRequest() {
       </summary>
       <div className="mt-3 space-y-3">
         <p className="text-sm text-slate-600">
-          You can ask the hospital for a full list of charges (an “itemized bill”). Send this letter, and we&apos;ll remind you to follow up after{" "}
-          {ITEMIZED_FOLLOW_UP_DAY} days if it hasn&apos;t arrived.
+          Ask for the full list of charges; we remind you after {ITEMIZED_FOLLOW_UP_DAY} days.
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block text-sm">
@@ -96,7 +100,7 @@ export function SummaryBillRequest() {
         <LetterBox
           id="itemized-request"
           title="Itemized bill request"
-          description="Asks for every line with codes, units and charges, the financial assistance policy, and a hold on collections."
+          description="Asks for every charge with its code and price."
           text={letter}
           filename={letterFilename("itemized-request", provider)}
         />

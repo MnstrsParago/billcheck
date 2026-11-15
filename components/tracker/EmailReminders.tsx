@@ -76,7 +76,7 @@ export default function EmailReminders({ dispute: d }: { dispute: Dispute }) {
       {!e ? (
         <>
           <p className="text-sm text-slate-600">
-            We&apos;ll email you a confirmation now, the follow-up letter on day 30 and a reminder to escalate on day 60.
+            Emails on day 30 and day 60.
           </p>
           <form
             className="flex flex-col gap-2 sm:flex-row"
@@ -111,14 +111,14 @@ export default function EmailReminders({ dispute: d }: { dispute: Dispute }) {
           <ul className="space-y-1 text-sm text-slate-600">
             <li>
               Day 30 follow-up email:{" "}
-              {e.followUp ? <strong>scheduled for {formatDate(e.followUp.at)}</strong> : "will be scheduled when it's within 30 days"}
+              {e.followUp ? <strong>{formatDate(e.followUp.at)}</strong> : "booked later"}
             </li>
             <li>
               Day 60 escalation email:{" "}
               {e.escalation ? (
                 <strong>scheduled for {formatDate(e.escalation.at)}</strong>
               ) : (
-                "scheduled automatically once it's within 30 days (our email service books at most 30 days ahead)"
+                "booked automatically 30 days before"
               )}
             </li>
           </ul>
@@ -136,11 +136,7 @@ export default function EmailReminders({ dispute: d }: { dispute: Dispute }) {
         </p>
       ) : null}
       <p className="text-xs text-slate-400">
-        Demo: emails come from onboarding@resend.dev, Resend&apos;s free test sender. Your address is kept only in this
-        browser and sent to Resend to deliver the emails; it is not stored in our database.
-        {e && (e.followUp || e.escalation)
-          ? " Dates use the real calendar, not the demo clock. Closing the dispute asks Resend to cancel scheduled emails; the demo key can only send, so already booked emails may still arrive."
-          : ""}
+        Demo sender onboarding@resend.dev; your address stays in this browser.
       </p>
     </section>
   );

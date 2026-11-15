@@ -105,7 +105,7 @@ function readFacts(disputeId: string | null): Facts {
 }
 
 const money = (n: number) => formatUSD(Math.round(n)).replace(/\.00$/, "");
-const item = (f: Finding) => f.description.replace(/,.*$/, "").trim() || `code ${f.cpt ?? ""}`;
+const item = (f: Finding) => f.description.split(/[,/(&]/)[0].trim().split(/\s+/).slice(0, 3).join(" ") || `code ${f.cpt ?? ""}`;
 
 type Text = string | ((f: Facts) => string);
 const show = (t: Text, f: Facts) => (typeof t === "function" ? t(f) : t);
@@ -122,7 +122,7 @@ type Step = {
 const STEPS: Step[] = [
   {
     title: "Let's check a sample ER bill",
-    body: "We'll load a sample hospital bill. The AI reads it the same way it would read yours.",
+    body: "The AI reads a sample bill, like it would read yours.",
     cta: "Load the sample bill",
     run: async ({ push }) => {
       if (location.pathname !== "/") push("/");
@@ -136,7 +136,7 @@ const STEPS: Step[] = [
   },
   {
     title: (f) => (f.rows ? `The AI found ${f.rows} charges` : "Here are the charges"),
-    body: "This is every charge from the bill. You can fix anything before we check it.",
+    body: "You can fix any charge before we check it.",
     cta: "Check the bill",
     run: async () => {
       (await waitFor('[data-tour="run-audit"]')).click();
@@ -146,12 +146,11 @@ const STEPS: Step[] = [
   {
     title: (f) => (f.total !== null ? `${money(f.total)} you can dispute` : "Here is what we found"),
     body: (f) =>
-      [
-        f.dup ? `The same ${item(f.dup)} was billed twice. That's ${money(f.dup.disputeAmount)} you shouldn't pay.` : "",
-        f.over && f.over.multiple ? `${item(f.over)} costs ${f.over.multiple.toFixed(1)}× what Medicare pays.` : "",
-      ]
-        .filter(Boolean)
-        .join(" ") || "We checked every charge against Medicare prices and looked for charges billed twice.",
+      f.dup
+        ? `The same ${item(f.dup)} was billed twice: ${money(f.dup.disputeAmount)} you shouldn't pay.`
+        : f.over && f.over.multiple
+          ? `${item(f.over)} costs ${f.over.multiple.toFixed(1)}× what Medicare pays.`
+          : "We checked every charge against Medicare prices.",
     cta: "See how to fix it",
     run: async () => {
       $('[data-tour="get-letter"]')?.click();
@@ -162,8 +161,7 @@ const STEPS: Step[] = [
   },
   {
     title: "Your letter is ready",
-    body: (f) =>
-      `BillCheck wrote a letter to ${f.provider} with all ${f.count} problems and amounts. Pro is free in this demo — no real charge.`,
+    body: (f) => `A letter to ${f.provider} with all ${f.count} problems (demo unlock, no charge).`,
     cta: "Start the dispute",
     run: async ({ setDisputeId }) => {
       resetClock();
@@ -176,7 +174,7 @@ const STEPS: Step[] = [
   },
   {
     title: "We tell you what to do next",
-    body: "Hospitals often don't answer. BillCheck reminds you when to follow up (day 30) and when to go further (day 60).",
+    body: "We remind you on day 30 and day 60.",
     cta: "Skip ahead 30 days",
     run: async ({ disputeId }) => {
       (await waitFor('[data-tour="simulate"]')).click();
@@ -186,7 +184,7 @@ const STEPS: Step[] = [
   },
   {
     title: "30 days later: time to follow up",
-    body: (f) => `No answer from ${f.provider} yet, so your follow-up letter is ready. Now let's say they lowered the bill.`,
+    body: (f) => `No answer from ${f.provider}, so the follow-up letter is ready.`,
     cta: "Record the result",
     run: async ({ disputeId }) => {
       const scope = disputeId ? `[data-dispute-id="${disputeId}"] ` : "";
@@ -196,7 +194,7 @@ const STEPS: Step[] = [
   },
   {
     title: "What did the hospital agree to?",
-    body: "Type the new price for each charge, then press “Save as resolved”. Results from this tour are saved as demo data.",
+    body: "Type the new prices, then press “Save as resolved”.",
     done: ({ disputeId }) => {
       const d = disputeId ? listDisputes().find((x) => x.id === disputeId) : null;
       return d?.status === "resolved" || d?.status === "escalated";
@@ -204,7 +202,7 @@ const STEPS: Step[] = [
   },
   {
     title: (f) => (f.saved !== null ? `You saved ${money(f.saved)}` : "Every result helps the next patient"),
-    body: "Your result (no personal data) joins a shared list. It shows which hospitals lower bills most often.",
+    body: "Your result joins the hospital ratings, anonymously.",
     cta: "See the hospital list",
     run: async ({ push }) => {
       push("/hospitals");
@@ -213,7 +211,7 @@ const STEPS: Step[] = [
   },
   {
     title: "That's BillCheck",
-    body: "Find the errors, send the letter, follow up until it's fixed — and help the next patient do the same.",
+    body: "Find errors, send the letter, follow up until fixed.",
     cta: "Done",
   },
 ];

@@ -4,9 +4,9 @@ import { competitorFees, sampleAuditSummary } from "@/lib/sampleStats";
 const usd0 = (n: number) => formatUSD(Math.round(n)).replace(/\.00$/, "");
 
 const STEPS = [
-  { title: "Upload your bill", body: "A PDF or a photo of each page. Our AI reads every charge." },
-  { title: "We check every charge", body: "Is anything billed twice? Is a price much higher than what Medicare pays?" },
-  { title: "Get it fixed", body: "We write the letter and remind you to follow up until the bill is fixed." },
+  { title: "Upload your bill", body: "PDF or photo." },
+  { title: "We check every charge", body: "Billed twice? Far above Medicare?" },
+  { title: "Get it fixed", body: "Letter and reminders." },
 ];
 
 /** Everything below the first screen: how it works, proof, price, the judge tour. */
@@ -41,7 +41,7 @@ export function Landing({ onTour, onSampleB }: { onTour?: () => void; onSampleB?
             className="text-sm text-slate-500 underline-offset-4 hover:text-slate-900 hover:underline"
             onClick={onSampleB}
           >
-            Try the second sample (low income, so you also see the free-care check)
+            Try the second sample
           </button>
         ) : null}
       </section>
@@ -51,7 +51,7 @@ export function Landing({ onTour, onSampleB }: { onTour?: () => void; onSampleB?
           <h2 id="price-title" className="text-3xl font-semibold tracking-tight sm:text-4xl">
             You keep what you save
           </h2>
-          <p className="text-slate-500">What it costs to dispute a bill with {usd0(average)} in savings:</p>
+          <p className="text-slate-500">Cost to dispute {usd0(average)}:</p>
         </div>
         <dl className="mx-auto max-w-xl divide-y divide-slate-100">
           <div className="flex items-baseline justify-between gap-4 py-4">
@@ -77,16 +77,13 @@ export function Landing({ onTour, onSampleB }: { onTour?: () => void; onSampleB?
           </div>
         </dl>
         <p className="mx-auto max-w-xl text-center text-xs text-slate-400">
-          *3 months of BillCheck, a typical dispute. Goodbill and Resolve talk to the hospital for you; BillCheck helps you
-          do it yourself. Their prices as published (Nov 2026): Goodbill 20% of savings, max $1,000; Resolve 25% of savings
-          with a $1,000 minimum on bills under $15,000.
+          *3 months. Competitor fees as published, Nov 2026.
         </p>
       </section>
 
       {onTour ? (
         <section className="space-y-4 rounded-3xl bg-slate-900 px-6 py-12 text-center text-white">
           <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">New here? See it all in 60 seconds.</h2>
-          <p className="text-slate-300">A short guided tour from a sample bill to a fixed bill.</p>
           <button
             type="button"
             onClick={onTour}

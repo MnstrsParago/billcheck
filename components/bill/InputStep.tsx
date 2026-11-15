@@ -28,7 +28,7 @@ function Progress({ onCancel }: { onCancel: () => void }) {
     <div role="status" aria-live="polite" className="flex flex-col items-center gap-3 py-6 text-center">
       <span className="h-8 w-8 animate-spin rounded-full border-[3px] border-emerald-600 border-t-transparent" aria-hidden />
       <p className="text-lg font-medium text-slate-900">{msg}</p>
-      <p className="text-sm text-slate-500">This usually takes 10–30 seconds. Long bills can take up to 2 minutes.</p>
+      <p className="text-sm text-slate-500">Usually under a minute.</p>
       <button type="button" onClick={onCancel} className="text-sm text-slate-500 underline-offset-4 hover:underline">
         Cancel
       </button>
@@ -171,8 +171,7 @@ export function InputStep({
             Hospital bills are often wrong.
           </h1>
           <p className="text-balance text-lg text-slate-500 sm:text-xl">
-            Upload your itemized bill. In about a minute you&apos;ll see what you shouldn&apos;t pay — and how to get it
-            fixed.
+            Upload your bill. See what you shouldn&apos;t pay.
           </p>
         </div>
 

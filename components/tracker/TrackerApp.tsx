@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { usePro } from "@/lib/pro";
 import { useNow } from "@/lib/tracker/clock";
 import { usd } from "@/lib/tracker/format";
@@ -15,7 +15,23 @@ function useHydrated(): boolean {
   return useSyncExternalStore(noop, () => true, () => false);
 }
 
+function useJustStarted(): boolean {
+  const [v, setV] = useState(false);
+  useEffect(() => {
+    let flag = false;
+    try {
+      flag = sessionStorage.getItem("bc.justStarted") === "1";
+      sessionStorage.removeItem("bc.justStarted");
+    } catch {
+      /* storage blocked */
+    }
+    setV(flag || new URLSearchParams(window.location.search).has("started"));
+  }, []);
+  return v;
+}
+
 export default function TrackerApp() {
+  const started = useJustStarted();
   const hydrated = useHydrated();
   const pro = usePro();
   const disputes = useDisputes();
@@ -46,12 +62,13 @@ export default function TrackerApp() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">Your disputes</h1>
-          <p className="text-sm text-slate-600">
-            {disputes.length === 0
-              ? "No disputes yet."
-              : `${open} open · ${disputes.length - open} closed`}
-          </p>
+          <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">My disputes</h1>
+          <p className="text-base text-slate-600">Track your disputes. We remind you when the hospital is late.</p>
+          {disputes.length > 0 ? (
+            <p className="mt-1 text-sm text-slate-500">
+              {open} open · {disputes.length - open} closed
+            </p>
+          ) : null}
         </div>
         {disputes.length > 0 && (
           <p className="text-sm text-slate-700">
@@ -61,9 +78,15 @@ export default function TrackerApp() {
       </div>
 
 
+      {started && open > 0 ? (
+        <p role="status" className="rounded-2xl bg-emerald-50 px-5 py-4 font-medium text-emerald-900">
+          Dispute started. We&apos;ll tell you when to follow up.
+        </p>
+      ) : null}
+
       {disputes.length === 0 ? (
         <div className="rounded-3xl bg-slate-50 p-8 text-center text-slate-600">
-          Check a bill and send the dispute letter — it will show up here with reminders at day 30 and day 60.
+          No disputes yet.
           <div className="mt-3">
             <Link href="/" className="font-medium text-emerald-700 hover:underline">
               Check a bill →

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ProBadge } from "@/components/ui/ProBadge";
 import { JudgeTour } from "@/components/tour/JudgeTour";
 import { TourLink } from "@/components/tour/TourLink";
+import { NavLinks } from "@/components/ui/NavLinks";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -33,11 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="sm:order-last">
               <TourLink />
             </div>
-            <div className="flex w-full items-center justify-between text-sm text-slate-500 sm:w-auto sm:justify-end sm:gap-6">
-              <Link href="/" className="hover:text-slate-900">Check a bill</Link>
-              <Link href="/tracker" className="hover:text-slate-900">My disputes</Link>
-              <Link href="/hospitals" className="hover:text-slate-900">Hospital ratings</Link>
-            </div>
+            <NavLinks />
           </nav>
         </header>
         <main className="mx-auto max-w-5xl px-5 py-6 sm:py-12">{children}</main>

@@ -68,14 +68,14 @@ export function LinesStep({
           ← Back
         </Button>
         <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 sm:text-5xl">Check the charges we found</h1>
-        <p className="mt-3 text-lg text-slate-600">Fix anything that looks wrong, then check the bill.</p>
+        <p className="mt-3 text-lg text-slate-600">Fix anything wrong, then check.</p>
       </div>
 
       {extractError && (
         <div role="alert" className="rounded-3xl bg-amber-50 p-5 text-base text-amber-900 sm:p-6">
           <p className="font-semibold">We couldn&apos;t read your bill automatically.</p>
           <p className="mt-1">{extractError}</p>
-          <p className="mt-1">No problem — type the charges below. The check works the same way.</p>
+
         </div>
       )}
 
