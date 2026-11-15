@@ -185,7 +185,7 @@ export function buildCharityLetter(input: CharityLetterInput): string {
 }
 
 /** Safe file name for a downloaded letter, e.g. "dispute-letter-st-mary-hospital.txt". */
-export function letterFilename(kind: "dispute" | "charity", provider: string | null): string {
+export function letterFilename(kind: "dispute" | "charity" | "ppdr" | "itemized-request", provider: string | null): string {
   const slug = (provider ?? "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
@@ -193,4 +193,105 @@ export function letterFilename(kind: "dispute" | "charity", provider: string | n
     .slice(0, 40);
   const base = kind === "dispute" ? "dispute-letter" : "charity-care-request";
   return `${base}${slug ? `-${slug}` : ""}.txt`;
+}
+
+// ---------------------------------------------------------------------------
+// No Surprises Act — federal patient-provider dispute resolution (PPDR) request.
+// Rules: https://www.cms.gov/medical-bill-rights/help/dispute-a-bill
+
+export type PpdrRequestInput = {
+  provider: string | null;
+  providerState?: string | null;
+  gfeAmount: number;
+  billDate: string; // yyyy-mm-dd
+  billed: number;
+  deadline: string; // yyyy-mm-dd
+  date?: Date;
+};
+
+const ymdLong = (ymd: string) => longDate(new Date(`${ymd}T00:00:00Z`));
+
+/** Text for the PPDR submission (online portal or mail/fax form): the facts the dispute rests on. */
+export function buildPpdrRequest(input: PpdrRequestInput): string {
+  const provider = providerName(input.provider);
+  const diff = Math.round((input.billed - input.gfeAmount) * 100) / 100;
+  return [
+    "PATIENT-PROVIDER DISPUTE RESOLUTION REQUEST (No Surprises Act)",
+    `Prepared ${longDate(input.date ?? new Date())}`,
+    "",
+    "Submit at https://nsa-idr.cms.gov/billdisputes (or with the CMS mail/fax form).",
+    `Deadline: ${ymdLong(input.deadline)} (120 calendar days from the date on the initial bill).`,
+    "Administrative fee: $25, non-refundable, paid when you submit.",
+    "",
+    "Patient",
+    "  Name: [Your name]",
+    "  Address / phone / email: [Your contact details]",
+    "",
+    "Provider or facility",
+    `  Name: ${provider}`,
+    `  State: ${input.providerState?.trim() || "[State]"}`,
+    "  Address / phone: [From the bill]",
+    "",
+    "Facts",
+    "  - I did not have, or did not use, health insurance for this care and told the provider so before the care.",
+    "  - Before the care, I received a Good Faith Estimate from this provider.",
+    `  - Good Faith Estimate total: ${usd(input.gfeAmount)}`,
+    `  - Date on the initial bill: ${ymdLong(input.billDate)}`,
+    `  - Amount billed: ${usd(input.billed)}`,
+    `  - Billed above the estimate: ${usd(diff)} (the threshold is $400 or more)`,
+    "",
+    "Request",
+    "  I am asking a selected dispute resolution entity to determine the amount I should pay for these items and",
+    "  services. While the dispute is in progress, the provider may not move this bill into collections or threaten",
+    "  to do so, must stop pursuing payment if it is already in collections, and may not collect late fees.",
+    "",
+    "Attach",
+    "  - A copy of the Good Faith Estimate",
+    "  - A copy of the bill (itemized, if you have it)",
+    "",
+    "Source: CMS, “Dispute a medical bill” — https://www.cms.gov/medical-bill-rights/help/dispute-a-bill",
+  ].join("\n");
+}
+
+// ---------------------------------------------------------------------------
+// Only a summary bill: ask the hospital for the itemized bill.
+
+export type ItemizedRequestInput = {
+  provider: string | null;
+  billTotal: number | null;
+  billDate?: string | null; // yyyy-mm-dd
+  date?: Date;
+};
+
+export function buildItemizedRequest(input: ItemizedRequestInput): string {
+  const provider = providerName(input.provider);
+  const total = input.billTotal !== null && Number.isFinite(input.billTotal) && input.billTotal > 0 ? usd(input.billTotal) : null;
+  return [
+    longDate(input.date ?? new Date()),
+    "",
+    provider,
+    "Attn: Patient Financial Services / Billing Department",
+    "",
+    "Re: Request for an itemized bill — Account [Account number]",
+    "Patient: [Patient name]",
+    "",
+    "To whom it may concern,",
+    "",
+    `I received a summary statement from ${provider}${input.billDate ? ` dated ${ymdLong(input.billDate)}` : ""}${total ? ` for ${total}` : ""}. ` +
+      "Before I pay, I am requesting a complete itemized bill for this account.",
+    "",
+    "Please include, for every charge:",
+    "  1. The date of service",
+    "  2. The CPT or HCPCS code (and any modifiers) and the revenue code",
+    "  3. A description of the service, supply or drug",
+    "  4. The number of units and the charge per line",
+    "  5. Any payments, adjustments and discounts applied",
+    "",
+    "Please also send a copy of your Financial Assistance Policy and its application form.",
+    "",
+    "I ask that this account be placed on hold and not be referred to collections until I receive the itemized bill and have",
+    "had a reasonable time to review it. Please send it within 14 days by mail or to the email address below.",
+    "",
+    ...SIGNATURE,
+  ].join("\n");
 }

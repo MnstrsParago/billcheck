@@ -1,5 +1,6 @@
 // Persisted draft of the bill-check flow (localStorage, SSR-safe, all access in try/catch).
 import type { BillLine, HouseholdInput } from "./types";
+import { EMPTY_GFE, type GfeInput } from "./audit/gfe";
 
 export const DRAFT_KEY = "bc.draft.v1";
 
@@ -20,6 +21,8 @@ export type Draft = {
   step: FlowStep;
   text: string;
   household: HouseholdInput;
+  /** No Surprises Act Good Faith Estimate (uninsured / self-pay). */
+  gfe: GfeInput;
   hospitalState: string; // where the hospital is; used for the outcomes DB
   provider: string;
   rows: EditableLine[];
@@ -36,6 +39,7 @@ export function emptyDraft(): Draft {
     step: "input",
     text: "",
     household: { ...EMPTY_HOUSEHOLD },
+    gfe: { ...EMPTY_GFE },
     hospitalState: "",
     provider: "",
     rows: [],
@@ -125,6 +129,7 @@ export function loadDraft(): Draft | null {
     if (!Array.isArray(d.rows)) d.rows = [];
     if (!Array.isArray(d.dropped)) d.dropped = [];
     if (!isObj(d.household)) d.household = { ...EMPTY_HOUSEHOLD };
+    if (!isObj(d.gfe)) d.gfe = { ...EMPTY_GFE };
     if (d.auditedLines !== null && !Array.isArray(d.auditedLines)) d.auditedLines = null;
     if (d.step === "result" && !d.auditedLines) d.step = d.rows.length ? "lines" : "input";
     if (typeof d.text !== "string") d.text = "";

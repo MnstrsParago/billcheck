@@ -98,7 +98,16 @@ export type DisputeStatus =
 
 export type DisputeEvent = {
   at: string; // ISO datetime (virtual clock)
-  type: "letter_sent" | "follow_up_due" | "follow_up_sent" | "escalation_due" | "resolved" | "escalated" | "note";
+  type:
+    | "letter_sent"
+    | "follow_up_due"
+    | "follow_up_sent"
+    | "escalation_due"
+    | "resolved"
+    | "escalated"
+    | "ppdr_filed"
+    | "itemized_received"
+    | "note";
   note?: string;
 };
 
@@ -125,6 +134,18 @@ export type Dispute = {
   savedAmount?: number; // set on Resolved
   closedAt?: string;
   outcomeShared?: boolean; // true once written to the shared outcomes DB
+  /** "itemized_request": only a summary bill — we asked the hospital for the itemized bill (14-day follow-up). */
+  kind?: "dispute" | "itemized_request";
+  /** No Surprises Act: federal patient-provider dispute (PPDR) data, when the bill exceeds the GFE by $400+. */
+  ppdr?: PpdrInfo;
+};
+
+export type PpdrInfo = {
+  gfeAmount: number;
+  billDate: string; // yyyy-mm-dd (initial bill)
+  billed: number;
+  difference: number;
+  deadline: string; // yyyy-mm-dd = billDate + 120 days
 };
 
 /** One anonymous row in the shared outcomes DB (one per disputed line). */

@@ -199,6 +199,8 @@ export function BillFlow() {
           hospitalState={draft.hospitalState}
           household={draft.household}
           onHousehold={(household) => patch({ household })}
+          gfeInput={draft.gfe}
+          onGfe={(gfe) => patch({ gfe })}
           onEditLines={() => go({ step: "lines" })}
           onNewBill={newBill}
         />

@@ -72,6 +72,8 @@ export type CreateDisputeInput = {
   state: string | null;
   billTotal: number;
   findings: Finding[];
+  kind?: Dispute["kind"];
+  ppdr?: Dispute["ppdr"];
 };
 
 export function createDispute(input: CreateDisputeInput): Dispute {
@@ -100,6 +102,8 @@ export function createDispute(input: CreateDisputeInput): Dispute {
     events: [{ at, type: "letter_sent" }],
     lines,
     findings: input.findings,
+    ...(input.kind ? { kind: input.kind } : {}),
+    ...(input.ppdr ? { ppdr: input.ppdr } : {}),
   };
   writeAll([dispute, ...parse(readRaw())]);
   return dispute;
@@ -129,6 +133,25 @@ function event(type: DisputeEvent["type"], note?: string): DisputeEvent {
 
 export function markFollowUpSent(id: string): Dispute | null {
   return updateDispute(id, (d) => ({ ...d, events: [...d.events, event("follow_up_sent")] }));
+}
+
+export function markPpdrFiled(id: string): Dispute | null {
+  return updateDispute(id, (d) => ({ ...d, events: [...d.events, event("ppdr_filed")] }));
+}
+
+/** Close an itemized-bill request once the bill arrives (nothing to share: no prices were disputed). */
+export function markItemizedReceived(id: string): Dispute | null {
+  return updateDispute(id, (d) => {
+    const at = getNow().toISOString();
+    return {
+      ...d,
+      status: "resolved",
+      savedAmount: 0,
+      closedAt: at,
+      outcomeShared: true,
+      events: [...d.events, { at, type: "itemized_received" }],
+    };
+  });
 }
 
 export type LineResolution = { finalPrice: number; argument: WinningArgument };

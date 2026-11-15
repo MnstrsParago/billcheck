@@ -4,13 +4,28 @@ import { useState } from "react";
 import type { Dispute, DisputeEvent, DisputeStatus } from "@/lib/types";
 import { shareOutcome } from "@/lib/outcomes/client";
 import { downloadIcs, downloadText } from "@/lib/tracker/ics";
-import { escalationLetter, followUpLetter } from "@/lib/tracker/letters";
+import { escalationLetter, followUpLetter, itemizedFollowUpLetter } from "@/lib/tracker/letters";
+import { buildPpdrRequest } from "@/lib/letters";
+import { PPDR_FEE, PPDR_PORTAL_URL, PPDR_SOURCE_URL } from "@/lib/audit/gfe";
 import { formatDate, usd } from "@/lib/tracker/format";
-import { ESCALATION_DAY, FOLLOW_UP_DAY, STATUS_LABEL, addDays, isClosed, nextStepFor } from "@/lib/tracker/status";
+import {
+  ESCALATION_DAY,
+  FOLLOW_UP_DAY,
+  ITEMIZED_FOLLOW_UP_DAY,
+  STATUS_LABEL,
+  addDays,
+  hasPpdrFiled,
+  isClosed,
+  isItemizedRequest,
+  nextStepFor,
+  ppdrDeadline,
+} from "@/lib/tracker/status";
 import {
   deleteDispute,
   escalateDispute,
   markFollowUpSent,
+  markItemizedReceived,
+  markPpdrFiled,
   resolveDispute,
   setOutcomeShared,
   type LineResolution,
@@ -33,17 +48,29 @@ const EVENT_LABEL: Record<DisputeEvent["type"], string> = {
   escalation_due: "Escalation due",
   resolved: "Resolved",
   escalated: "Escalated",
+  ppdr_filed: "Federal Good Faith Estimate dispute filed",
+  itemized_received: "Itemized bill received",
   note: "Note",
 };
+
+function eventLabel(d: Dispute, e: DisputeEvent): string {
+  if (isItemizedRequest(d)) {
+    if (e.type === "letter_sent") return "Itemized bill requested";
+    if (e.type === "follow_up_sent") return "Second request sent";
+  }
+  return EVENT_LABEL[e.type];
+}
 
 /** Stored events plus the day-30 / day-60 milestones that have been reached. */
 function timeline(d: Dispute, now: Date): DisputeEvent[] {
   const end = d.closedAt ? new Date(d.closedAt) : now;
   const out = [...d.events];
-  const fu = addDays(d.startedAt, FOLLOW_UP_DAY);
-  const esc = addDays(d.startedAt, ESCALATION_DAY);
+  const itemized = isItemizedRequest(d);
+  const fu = addDays(d.startedAt, itemized ? ITEMIZED_FOLLOW_UP_DAY : FOLLOW_UP_DAY);
   if (fu <= end && !out.some((e) => e.type === "follow_up_due")) out.push({ at: fu.toISOString(), type: "follow_up_due" });
-  if (esc <= end && !out.some((e) => e.type === "escalation_due")) out.push({ at: esc.toISOString(), type: "escalation_due" });
+  const esc = addDays(d.startedAt, ESCALATION_DAY);
+  if (!itemized && esc <= end && !out.some((e) => e.type === "escalation_due"))
+    out.push({ at: esc.toISOString(), type: "escalation_due" });
   return out.sort((a, b) => a.at.localeCompare(b.at));
 }
 
@@ -55,9 +82,17 @@ export default function DisputeCard({ dispute: d, now }: { dispute: Dispute; now
   const [copied, setCopied] = useState(false);
 
   const closed = isClosed(d);
+  const itemized = isItemizedRequest(d);
   const step = nextStepFor(d, now);
+  const deadline = ppdrDeadline(d);
+  const daysLeft = deadline ? Math.ceil((deadline.getTime() - now.getTime()) / 86_400_000) : null;
+  const ppdrText = d.ppdr
+    ? buildPpdrRequest({ provider: d.provider, providerState: d.state, ...d.ppdr, date: now })
+    : null;
   const letter =
-    d.status === "follow_up_due"
+    d.status === "follow_up_due" && itemized
+      ? { title: "Second request for the itemized bill", text: itemizedFollowUpLetter(d, now), file: "itemized-bill-second-request.txt" }
+      : d.status === "follow_up_due"
       ? { title: "Follow-up letter", text: followUpLetter(d, now), file: "follow-up-letter.txt" }
       : d.status === "escalation_due"
         ? { title: "Escalation letter", text: escalationLetter(d, now), file: "escalation-letter.txt" }
@@ -118,7 +153,7 @@ export default function DisputeCard({ dispute: d, now }: { dispute: Dispute; now
         <div className="min-w-0">
           <h2 className="truncate text-base font-semibold text-slate-900">{d.provider}</h2>
           <p className="text-xs text-slate-500">
-            Started {formatDate(d.startedAt)}
+            {itemized ? "Itemized bill request · " : ""}Started {formatDate(d.startedAt)}
             {d.state ? ` · ${d.state}` : ""}
           </p>
         </div>
@@ -139,7 +174,7 @@ export default function DisputeCard({ dispute: d, now }: { dispute: Dispute; now
         <div className="rounded-lg bg-emerald-50 p-2">
           <dt className="text-[11px] text-slate-500">Saved</dt>
           <dd className="text-sm font-semibold text-emerald-700">
-            {d.status === "resolved" ? usd(d.savedAmount ?? 0) : "—"}
+            {d.status === "resolved" && !itemized ? usd(d.savedAmount ?? 0) : "—"}
           </dd>
         </div>
       </dl>
@@ -171,7 +206,7 @@ export default function DisputeCard({ dispute: d, now }: { dispute: Dispute; now
           <li key={`${e.type}-${i}`} className="relative text-sm">
             <span className="absolute -left-[21px] top-1.5 h-2 w-2 rounded-full bg-slate-400" />
             <span className="text-slate-500">{formatDate(e.at)}</span>{" "}
-            <span className="text-slate-800">{EVENT_LABEL[e.type]}</span>
+            <span className="text-slate-800">{eventLabel(d, e)}</span>
             {e.note && <span className="text-slate-500"> — {e.note}</span>}
           </li>
         ))}
@@ -209,8 +244,65 @@ export default function DisputeCard({ dispute: d, now }: { dispute: Dispute; now
         </section>
       )}
 
+      {d.ppdr && ppdrText && !closed && (
+        <section className="space-y-2 rounded-lg border border-sky-200 bg-sky-50/60 p-3">
+          <h3 className="text-sm font-semibold text-slate-900">
+            Federal Good Faith Estimate dispute (No Surprises Act)
+          </h3>
+          <p className="text-sm text-slate-700">
+            Billed {usd(d.ppdr.billed)} vs. estimate {usd(d.ppdr.gfeAmount)} — {usd(d.ppdr.difference)} over.{" "}
+            {hasPpdrFiled(d) ? (
+              <strong className="text-emerald-700">Filed.</strong>
+            ) : (
+              <>
+                File by <strong>{formatDate(`${d.ppdr.deadline}T00:00:00Z`)}</strong>
+                {daysLeft !== null && daysLeft >= 0 ? ` (${daysLeft} day${daysLeft === 1 ? "" : "s"} left)` : " (deadline passed)"}
+                . ${PPDR_FEE} fee.
+              </>
+            )}
+          </p>
+          {!hasPpdrFiled(d) && (
+            <>
+              <textarea
+                readOnly
+                value={ppdrText}
+                rows={6}
+                aria-label="Federal dispute request text"
+                className="block w-full resize-y rounded-md border border-slate-200 bg-white p-2 font-mono text-xs text-slate-800"
+              />
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={() => copy(ppdrText)} className={secondary}>
+                  {copied ? "Copied" : "Copy request"}
+                </button>
+                <button type="button" onClick={() => downloadText("ppdr-request.txt", ppdrText)} className={secondary}>
+                  Download .txt
+                </button>
+                <a href={PPDR_PORTAL_URL} target="_blank" rel="noopener noreferrer" className={secondary}>
+                  Open CMS dispute portal ↗
+                </a>
+                <button type="button" onClick={() => markPpdrFiled(d.id)} className={primary}>
+                  Mark as filed
+                </button>
+              </div>
+            </>
+          )}
+          <p className="text-xs text-slate-500">
+            Source:{" "}
+            <a className="underline" href={PPDR_SOURCE_URL} target="_blank" rel="noopener noreferrer">
+              CMS — Dispute a medical bill
+            </a>
+          </p>
+        </section>
+      )}
+
       {resolving && !closed && (
         <ResolveForm dispute={d} onSubmit={onResolve} onCancel={() => setResolving(false)} />
+      )}
+
+      {closed && itemized && (
+        <a href="/" className="inline-block text-sm font-medium text-emerald-700 hover:underline">
+          Check the itemized bill now →
+        </a>
       )}
 
       {closed && share === "sharing" && <p className="text-xs text-slate-500">Sharing anonymous result…</p>}
@@ -233,14 +325,22 @@ export default function DisputeCard({ dispute: d, now }: { dispute: Dispute; now
             <button type="button" onClick={() => downloadIcs(d)} className={secondary}>
               Add to calendar
             </button>
-            {!resolving && (
-              <button type="button" data-tour="resolve" onClick={() => setResolving(true)} className={primary}>
-                Resolve
+            {itemized ? (
+              <button type="button" onClick={() => markItemizedReceived(d.id)} className={primary}>
+                Itemized bill received
               </button>
+            ) : (
+              <>
+                {!resolving && (
+                  <button type="button" data-tour="resolve" onClick={() => setResolving(true)} className={primary}>
+                    Resolve
+                  </button>
+                )}
+                <button type="button" onClick={onEscalate} className={secondary}>
+                  Escalate
+                </button>
+              </>
             )}
-            <button type="button" onClick={onEscalate} className={secondary}>
-              Escalate
-            </button>
           </>
         )}
         <button type="button" onClick={onDelete} className={`${btn} ml-auto text-rose-600 hover:bg-rose-50`}>

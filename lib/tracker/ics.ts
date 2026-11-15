@@ -1,7 +1,7 @@
 // RFC 5545 calendar export for a dispute: day-30 follow-up and day-60 escalation.
 
 import type { Dispute } from "@/lib/types";
-import { ESCALATION_DAY, FOLLOW_UP_DAY, addDays } from "./status";
+import { ESCALATION_DAY, FOLLOW_UP_DAY, ITEMIZED_FOLLOW_UP_DAY, addDays, isItemizedRequest, ppdrDeadline } from "./status";
 
 /** Escape TEXT values per RFC 5545 §3.3.11. */
 export function escapeText(s: string): string {
@@ -37,7 +37,8 @@ const stamp = (d: Date) =>
 
 export function buildIcs(d: Dispute, dtstamp: Date = new Date()): string {
   const usd = `$${d.amountDisputed.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  const events = [
+  type CalEvent = { key: string; day?: number; date?: Date; summary: string; description: string };
+  const dispute: CalEvent[] = [
     {
       key: "follow-up",
       day: FOLLOW_UP_DAY,
@@ -51,6 +52,25 @@ export function buildIcs(d: Dispute, dtstamp: Date = new Date()): string {
       description: `Day ${ESCALATION_DAY} of your dispute with ${d.provider} (${usd} disputed). If unresolved, request a formal itemized review and consider a complaint to your state attorney general or insurance/health department consumer line.`,
     },
   ];
+  const itemized: CalEvent[] = [
+    {
+      key: "itemized-follow-up",
+      day: ITEMIZED_FOLLOW_UP_DAY,
+      summary: `BillCheck: follow up on itemized bill from ${d.provider}`,
+      description: `Day ${ITEMIZED_FOLLOW_UP_DAY} since you asked ${d.provider} for an itemized bill. If it hasn't arrived, send the second request from your BillCheck tracker.`,
+    },
+  ];
+  const events: CalEvent[] = isItemizedRequest(d) ? itemized : dispute;
+  const ppdr = ppdrDeadline(d);
+  if (ppdr) {
+    events.push({
+      key: "ppdr-deadline",
+      date: ppdr,
+      summary: `BillCheck: last day to file the Good Faith Estimate dispute (${d.provider})`,
+      description:
+        "Last day of the 120-day window to file a federal patient-provider dispute (No Surprises Act) at https://nsa-idr.cms.gov/billdisputes. $25 fee. Your request text is in the BillCheck tracker.",
+    });
+  }
   const lines: string[] = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
@@ -59,7 +79,7 @@ export function buildIcs(d: Dispute, dtstamp: Date = new Date()): string {
     "METHOD:PUBLISH",
   ];
   for (const e of events) {
-    const start = addDays(d.startedAt, e.day);
+    const start = e.date ?? addDays(d.startedAt, e.day ?? 0);
     const end = addDays(start, 1);
     lines.push(
       "BEGIN:VEVENT",

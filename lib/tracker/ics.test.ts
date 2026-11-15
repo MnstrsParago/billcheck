@@ -69,3 +69,32 @@ describe("letters", () => {
     expect(t).toContain("January 1, 2026");
   });
 });
+
+describe("buildIcs — itemized request and PPDR deadline", () => {
+  const base = {
+    id: "x1",
+    provider: "Lakeview Medical Center",
+    state: "OH",
+    amountDisputed: 0,
+    billTotal: 2890,
+    startedAt: "2026-11-15T10:00:00.000Z",
+    status: "letter_sent" as const,
+    events: [],
+    lines: [],
+    findings: [],
+  };
+  it("itemized request has only the day-14 reminder", () => {
+    const ics = buildIcs({ ...base, kind: "itemized_request" }, new Date("2026-11-15T10:00:00Z"));
+    expect(ics.match(/BEGIN:VEVENT/g)).toHaveLength(1);
+    expect(ics).toContain("DTSTART;VALUE=DATE:20261129");
+  });
+  it("adds the PPDR last-day event", () => {
+    const ics = buildIcs(
+      { ...base, ppdr: { gfeAmount: 1000, billDate: "2026-11-01", billed: 2000, difference: 1000, deadline: "2027-03-01" } },
+      new Date("2026-11-15T10:00:00Z"),
+    );
+    expect(ics.match(/BEGIN:VEVENT/g)).toHaveLength(3);
+    expect(ics).toContain("DTSTART;VALUE=DATE:20270301");
+    expect(ics).toContain("nsa-idr.cms.gov");
+  });
+});

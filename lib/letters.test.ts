@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { buildCharityLetter, buildDisputeLetter, canBuildCharityLetter, letterFilename, usd } from "./letters";
+import {
+  buildCharityLetter,
+  buildDisputeLetter,
+  buildItemizedRequest,
+  buildPpdrRequest,
+  canBuildCharityLetter,
+  letterFilename,
+  usd,
+} from "./letters";
 import type { CharityResult, Finding } from "./types";
 
 const dup: Finding = {
@@ -161,5 +169,38 @@ describe("dispute letter — hospital facility (OPPS) finding", () => {
     });
     expect(text).toContain("hospital outpatient (OPPS)");
     expect(text).toContain("$608.43");
+  });
+});
+
+describe("PPDR request (No Surprises Act)", () => {
+  it("contains the facts, deadline, fee and CMS source", () => {
+    const t = buildPpdrRequest({
+      provider: "Maple Crest Medical Center",
+      providerState: "PA",
+      gfeAmount: 1200,
+      billDate: "2026-10-01",
+      billed: 2085,
+      deadline: "2027-01-29",
+      date: new Date("2026-11-15T00:00:00Z"),
+    });
+    expect(t).toContain("Good Faith Estimate total: $1,200.00");
+    expect(t).toContain("Amount billed: $2,085.00");
+    expect(t).toContain("Billed above the estimate: $885.00");
+    expect(t).toContain("January 29, 2027");
+    expect(t).toContain("$25");
+    expect(t).toContain("nsa-idr.cms.gov/billdisputes");
+    expect(t).toContain("cms.gov/medical-bill-rights/help/dispute-a-bill");
+  });
+});
+
+describe("itemized bill request", () => {
+  it("asks for codes, units and charges per line and a collections hold", () => {
+    const t = buildItemizedRequest({ provider: "Lakeview Medical Center", billTotal: 2890, billDate: "2026-06-05", date: new Date("2026-11-15T00:00:00Z") });
+    expect(t).toContain("Lakeview Medical Center");
+    expect(t).toContain("$2,890.00");
+    expect(t).toContain("June 5, 2026");
+    expect(t).toMatch(/CPT or HCPCS code/);
+    expect(t).toMatch(/collections/);
+    expect(buildItemizedRequest({ provider: "", billTotal: null })).toContain("[Hospital name]");
   });
 });

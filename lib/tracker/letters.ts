@@ -85,3 +85,23 @@ Sincerely,
 [Account / patient number]
 [Phone or email]`;
 }
+
+/** Day-14 follow-up when the hospital hasn't sent the itemized bill yet. */
+export function itemizedFollowUpLetter(d: Dispute, now: Date): string {
+  const sent = formatDate(d.startedAt);
+  return `${formatDate(now)}
+
+To: Patient Financial Services, ${d.provider}
+Re: Second request for an itemized bill (first requested ${sent})
+
+Dear Billing Department,
+
+On ${sent} I asked you in writing for a complete itemized bill for my account${d.billTotal > 0 ? ` (summary total: ${usd(d.billTotal)})` : ""}. I have not received it yet.
+
+Please send the itemized bill — with dates of service, CPT/HCPCS and revenue codes, descriptions, units and charges for every line — within 14 days, and keep this account on hold and out of collections until I have had a reasonable time to review it.
+
+Thank you,
+[Your name]
+[Account / patient number]
+[Phone or email]`;
+}

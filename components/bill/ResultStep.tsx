@@ -3,7 +3,9 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatUSD } from "@/lib/audit";
-import { buildCharityLetter, buildDisputeLetter, canBuildCharityLetter, letterFilename } from "@/lib/letters";
+import { buildCharityLetter, buildDisputeLetter, buildPpdrRequest, canBuildCharityLetter, letterFilename } from "@/lib/letters";
+import { checkGfe, GFE_LABEL, type GfeInput } from "@/lib/audit/gfe";
+import { useNow } from "@/lib/tracker/clock";
 import { setPro, usePro } from "@/lib/pro";
 import { createDispute } from "@/lib/tracker/store";
 import type { AuditResult, BillLine, HouseholdInput } from "@/lib/types";
@@ -14,6 +16,7 @@ import { ProBadge } from "@/components/ui/ProBadge";
 import { CharityCard, CHARITY_LABEL } from "./CharityCard";
 import { CoverageNote } from "./CoverageNote";
 import { FindingItem } from "./FindingItem";
+import { GfeCard } from "./GfeCard";
 import { LetterBox } from "./LetterBox";
 import { Paywall, PAYWALL_ID } from "./Paywall";
 
@@ -31,9 +34,13 @@ export function ResultStep({
   hospitalState,
   household,
   onHousehold,
+  gfeInput,
+  onGfe,
   onEditLines,
   onNewBill,
 }: {
+  gfeInput: GfeInput;
+  onGfe: (g: GfeInput) => void;
   result: AuditResult;
   lines: BillLine[];
   provider: string;
@@ -47,6 +54,17 @@ export function ResultStep({
   const router = useRouter();
   const [startError, setStartError] = useState<string | null>(null);
   const { findings, totalDisputable, billTotal, charity, lineStatus } = result;
+  const now = useNow();
+  const gfe = useMemo(() => checkGfe(gfeInput, billTotal, now), [gfeInput, billTotal, now]);
+  const ppdr =
+    gfe.status === "eligible" && gfe.deadline && gfe.gfeAmount !== null && gfeInput.billDate
+      ? { gfeAmount: gfe.gfeAmount, billDate: gfeInput.billDate, billed: gfe.billed, difference: gfe.difference ?? 0, deadline: gfe.deadline }
+      : null;
+  const ppdrText = useMemo(
+    () => (pro && ppdr ? buildPpdrRequest({ provider, providerState: hospitalState, ...ppdr }) : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [pro, provider, hospitalState, ppdr?.gfeAmount, ppdr?.billDate, ppdr?.billed, ppdr?.deadline],
+  );
 
   const cpts = useMemo(() => findings.map((f) => f.cpt), [findings]);
   const stats = useCodeStats(provider, cpts);
@@ -66,7 +84,7 @@ export function ResultStep({
 
   const startDispute = () => {
     try {
-      createDispute({ provider: provider.trim(), state: hospitalState || null, billTotal, findings });
+      createDispute({ provider: provider.trim(), state: hospitalState || null, billTotal, findings, ...(ppdr ? { ppdr } : {}) });
       router.push("/tracker");
     } catch {
       setStartError("Couldn't save the dispute in this browser (storage may be blocked).");
@@ -116,6 +134,9 @@ export function ResultStep({
             <p>
               Charity care: <strong>{CHARITY_LABEL[charity.status]}</strong>
             </p>
+            <p>
+              Good Faith Estimate: <strong>{GFE_LABEL[gfe.status]}</strong>
+            </p>
           </div>
         </div>
         {n === 0 && (
@@ -157,8 +178,9 @@ export function ResultStep({
 
       <div className="grid gap-5 lg:grid-cols-2">
         <CharityCard charity={charity} household={household} onHousehold={onHousehold} />
-        <CoverageNote lineStatus={lineStatus} lines={lines} />
+        <GfeCard gfe={gfe} input={gfeInput} onInput={onGfe} />
       </div>
+      <CoverageNote lineStatus={lineStatus} lines={lines} />
 
       {!pro ? (
         <Paywall disputable={totalDisputable} onUpgrade={upgrade} />
@@ -171,12 +193,13 @@ export function ResultStep({
             <ProBadge />
           </div>
 
-          {n > 0 && (
+          {(n > 0 || ppdr) && (
             <Card className="flex flex-col gap-3 border-emerald-200 bg-emerald-50/60 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="font-medium text-slate-900">Track this dispute</p>
                 <p className="text-sm text-slate-600">
-                  Adds {formatUSD(totalDisputable)} to your tracker with a day-30 follow-up and day-60 escalation.
+                  Adds {formatUSD(totalDisputable)} to your tracker with a day-30 follow-up and day-60 escalation
+                  {ppdr ? ", plus the federal dispute deadline" : ""}.
                 </p>
                 {startError && (
                   <p className="mt-1 text-sm text-rose-600" role="alert">
@@ -197,6 +220,16 @@ export function ResultStep({
               description={`Lists all ${n} finding${n === 1 ? "" : "s"} with CPT codes and amounts, and asks for an itemized review, a corrected bill and a hold on collections.`}
               text={disputeLetter}
               filename={letterFilename("dispute", provider)}
+            />
+          )}
+
+          {ppdrText && (
+            <LetterBox
+              id="ppdr-request"
+              title="Federal Good Faith Estimate dispute — request text"
+              description="Everything the CMS patient-provider dispute form asks for: the estimate, the bill, the difference and your request. Submit it at nsa-idr.cms.gov/billdisputes with the $25 fee."
+              text={ppdrText}
+              filename={letterFilename("ppdr", provider)}
             />
           )}
 

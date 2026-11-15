@@ -84,3 +84,36 @@ describe("nextAction", () => {
     expect(a.dueDate.toISOString()).toBe(at(10).toISOString());
   });
 });
+
+describe("itemized bill request (14-day follow-up)", () => {
+  const req = (over: Partial<Dispute> = {}) => mk({ kind: "itemized_request", amountDisputed: 0, ...over });
+  it("follow-up due at day 14, never escalates", () => {
+    expect(computeStatus(req(), at(0))).toBe("letter_sent");
+    expect(computeStatus(req(), at(13))).toBe("waiting");
+    expect(computeStatus(req(), at(14))).toBe("follow_up_due");
+    expect(computeStatus(req(), at(90))).toBe("follow_up_due");
+    const sent = req({ events: [{ at: START, type: "letter_sent" }, { at: at(15).toISOString(), type: "follow_up_sent" }] });
+    expect(computeStatus(sent, at(90))).toBe("waiting");
+  });
+  it("next action is the day-14 follow-up", () => {
+    const n = nextAction([req()], at(1))!;
+    expect(n.kind).toBe("follow_up");
+    expect(n.dueDate.toISOString()).toBe(at(14).toISOString());
+    expect(n.label).toContain("itemized");
+  });
+});
+
+describe("PPDR deadline in the tracker", () => {
+  const ppdr = { gfeAmount: 1000, billDate: "2025-12-20", billed: 2000, difference: 1000, deadline: "2026-04-19" };
+  it("deadline becomes the next action when it comes before the regular step", () => {
+    const early = mk({ ppdr: { ...ppdr, deadline: "2026-01-20" } });
+    const n = nextAction([early], at(1))!;
+    expect(n.kind).toBe("ppdr_deadline");
+    expect(n.dueDate.toISOString().slice(0, 10)).toBe("2026-01-20");
+  });
+  it("regular follow-up stays first when the deadline is later; filed deadline disappears", () => {
+    expect(nextAction([mk({ ppdr })], at(1))!.kind).toBe("follow_up");
+    const filed = mk({ ppdr: { ...ppdr, deadline: "2026-01-05" }, events: [{ at: START, type: "letter_sent" }, { at: START, type: "ppdr_filed" }] });
+    expect(nextAction([filed], at(1))!.kind).toBe("follow_up");
+  });
+});
