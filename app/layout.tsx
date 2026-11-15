@@ -35,7 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </header>
         <main className="mx-auto max-w-3xl px-5 py-10 sm:py-20">{children}</main>
         <JudgeTour />
-        <footer className="mx-auto max-w-3xl px-5 pb-12 pt-10 text-xs text-slate-400">
+        <footer className="mx-auto max-w-3xl px-5 pb-12 pt-10 text-center text-xs text-slate-400">
           Not legal or medical advice. Prices are Medicare 2026 references, not guarantees.
         </footer>
       </body>
