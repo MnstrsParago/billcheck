@@ -7,11 +7,9 @@ export default function DemoClock() {
   const offset = useClockOffset();
   const now = useNow();
   return (
-    <div className="flex flex-col gap-3 rounded-3xl bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="text-sm">
-        <span className="mr-2 rounded bg-slate-900 px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-white">
-          Demo clock
-        </span>
+        
         <span className="font-medium text-slate-900">{formatDate(now)}</span>
         {offset !== 0 && <span className="ml-1 text-slate-500">(+{offset} days simulated)</span>}
       </div>

@@ -32,8 +32,7 @@ export default async function HospitalsPage() {
   return (
     <div className="space-y-6">
       <header className="space-y-2">
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-5xl">Hospital ratings</h1>
-        <p className="text-lg text-slate-500">How often each hospital lowers a disputed charge.</p>
+        <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">Hospital ratings</h1>
       </header>
 
       {!data ? (
@@ -46,7 +45,7 @@ export default async function HospitalsPage() {
       ) : data.rankings.length === 0 ? (
         <div className="rounded-3xl bg-slate-50 p-6 text-sm text-slate-600">No ratings yet.</div>
       ) : (
-        <div className="overflow-hidden rounded-3xl bg-slate-50">
+        <div>
           <table className="w-full table-fixed text-left text-sm">
             <thead className="text-[11px] text-slate-500 sm:text-xs">
               <tr>
@@ -54,15 +53,15 @@ export default async function HospitalsPage() {
                 <th className="w-[10%] px-1 py-3 font-medium">State</th>
                 <th className="w-[17%] px-1 py-3 text-right font-medium">Disputes</th>
                 <th className="w-[16%] px-1 py-3 text-right font-medium">Lowered</th>
-                <th className="w-[17%] px-3 py-3 text-right font-medium sm:px-5">Median cut</th>
+                <th className="w-[17%] px-3 py-3 text-right font-medium sm:px-5">Cut</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white">
+            <tbody className="divide-y divide-slate-100">
               {data.rankings.map((r) => (
                 <tr key={r.hospitalKey}>
                   <td className="truncate px-3 py-3 font-medium text-slate-900 sm:px-5" title={r.hospital}>
                     {r.hospital}
-                    {r.demoCount > 0 ? <span className="ml-1.5 text-xs font-normal text-amber-700">demo</span> : null}
+                    {r.demoCount > 0 ? <span className="ml-1.5 text-xs font-normal text-slate-400">demo</span> : null}
                   </td>
                   <td className="px-1 py-3 text-slate-600">{r.state ?? "—"}</td>
                   <td className="px-1 py-3 text-right tabular-nums text-slate-600">{r.disputes}</td>
@@ -76,14 +75,12 @@ export default async function HospitalsPage() {
       )}
 
       <details className="text-sm text-slate-500">
-        <summary className="cursor-pointer select-none font-medium text-slate-600">How we count</summary>
-        <ul className="mt-3 list-disc space-y-1 pl-5">
-          <li>One anonymous row per closed disputed charge: hospital, state, code, prices, reason. No names or dates.</li>
-          <li>Lowered = share of disputed charges that got a lower price. Median cut = typical cut when lowered.</li>
-          <li>Hospitals with fewer than {MIN_RANKING_SAMPLE} closed charges are not shown.</li>
+        <summary className="cursor-pointer select-none list-none text-slate-400 underline underline-offset-4">How we count</summary>
+        <ul className="mt-3 space-y-1">
+          <li>Anonymous closed disputes. Lowered: share with a lower price. Cut: median cut.</li>
           {data ? (
             <li>
-              {data.totals.records} results: {data.totals.real} real, {data.totals.demo} demo (fictional hospitals, sample data).
+              {data.totals.real} real, {data.totals.demo} demo results.
             </li>
           ) : null}
         </ul>

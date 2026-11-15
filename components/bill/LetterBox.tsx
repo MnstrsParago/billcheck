@@ -64,34 +64,28 @@ export function LetterBox({
     setTimeout(() => setCopied("idle"), 2000);
   };
   return (
-    <section aria-labelledby={`${id}-title`} data-tour={id} className="scroll-mt-20 rounded-3xl bg-slate-50 p-5 sm:p-7">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <h3 id={`${id}-title`} className="text-lg font-semibold tracking-tight text-slate-900">
-            {title}
-          </h3>
-          <p className="mt-1 text-base text-slate-600">{description}</p>
-        </div>
-        <div className="flex shrink-0 flex-wrap gap-2">
-          <Button variant="primary" size="sm" onClick={onCopy}>
-            {copied === "ok" ? "Copied ✓" : copied === "fail" ? "Copy failed" : "Copy"}
-          </Button>
-          <Button variant="secondary" size="sm" onClick={() => downloadText(text, filename)}>
+    <section aria-labelledby={`${id}-title`} data-tour={id} className="scroll-mt-20 space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <h3 id={`${id}-title`} className="text-base font-medium text-slate-900">
+          {title}
+        </h3>
+        <div className="flex gap-4 text-sm">
+          <button type="button" onClick={() => void onCopy()} className="underline underline-offset-4">
+            {copied === "ok" ? "Copied" : copied === "fail" ? "Copy failed" : "Copy"}
+          </button>
+          <button type="button" onClick={() => downloadText(text, filename)} className="underline underline-offset-4">
             Download .txt
-          </Button>
+          </button>
         </div>
       </div>
-      <label htmlFor={`${id}-text`} className="sr-only">
-        {title} text
-      </label>
+      {description ? <p className="sr-only">{description}</p> : null}
       <textarea
-        id={`${id}-text`}
         readOnly
         value={text}
-        rows={12}
-        className="mt-4 block w-full resize-y rounded-2xl bg-white p-4 font-mono text-[13px] leading-relaxed text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+        rows={10}
+        aria-label={title}
+        className="block w-full resize-y rounded-xl border border-slate-200 p-4 font-mono text-[13px] leading-relaxed text-slate-800 focus:outline-none"
       />
-      <p className="mt-3 text-sm text-slate-500">Fill in the [brackets], then send it.</p>
     </section>
   );
 }

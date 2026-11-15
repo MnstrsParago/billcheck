@@ -41,14 +41,12 @@ export default function TrackerApp() {
 
   if (!pro) {
     return (
-      <div className="mx-auto max-w-md rounded-3xl bg-slate-50 p-8 text-center">
-        <h1 className="text-lg font-semibold text-slate-900">The dispute tracker is a Pro feature</h1>
-        <p className="mt-2 text-sm text-slate-600">
-          Pro tracks every dispute, reminds you at day 30 and day 60, and writes the follow-up and escalation letters.
-        </p>
+      <div className="text-center">
+        <h1 className="text-4xl font-semibold tracking-tight text-slate-900">My disputes</h1>
+        <p className="mt-2 text-slate-500">Part of Pro.</p>
         <Link
           href="/"
-          className="mt-4 inline-block rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+          className="mt-4 inline-block text-slate-900 underline underline-offset-4"
         >
           Upgrade to Pro
         </Link>
@@ -59,50 +57,40 @@ export default function TrackerApp() {
   const open = disputes.filter((d) => d.status !== "resolved" && d.status !== "escalated").length;
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-end justify-between gap-2">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">My disputes</h1>
-          <p className="text-base text-slate-600">Track your disputes. We remind you when the hospital is late.</p>
-          {disputes.length > 0 ? (
-            <p className="mt-1 text-sm text-slate-500">
-              {open} open · {disputes.length - open} closed
-            </p>
-          ) : null}
-        </div>
-        {disputes.length > 0 && (
-          <p className="text-sm text-slate-700">
-            Saved so far: <span className="font-semibold text-emerald-700">{usd(savedSoFar(disputes))}</span>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">My disputes</h1>
+        <p className="mt-2 text-base text-slate-500">We remind you when the hospital is late.</p>
+        {disputes.length > 0 ? (
+          <p className="mt-1 text-sm text-slate-400">
+            {open} open · saved {usd(savedSoFar(disputes))}
           </p>
-        )}
+        ) : null}
       </div>
 
-
       {started && open > 0 ? (
-        <p role="status" className="rounded-2xl bg-emerald-50 px-5 py-4 font-medium text-emerald-900">
+        <p role="status" className="text-base font-medium text-slate-900">
           Dispute started. We&apos;ll tell you when to follow up.
         </p>
       ) : null}
 
       {disputes.length === 0 ? (
-        <div className="rounded-3xl bg-slate-50 p-8 text-center text-slate-600">
-          No disputes yet.
-          <div className="mt-3">
-            <Link href="/" className="font-medium text-emerald-700 hover:underline">
-              Check a bill →
-            </Link>
-          </div>
-        </div>
+        <p className="text-slate-500">
+          No disputes yet.{" "}
+          <Link href="/" className="text-slate-900 underline underline-offset-4">
+            Check a bill
+          </Link>
+        </p>
       ) : (
-        <div className="space-y-4">
+        <div>
           {disputes.map((d) => (
             <DisputeCard key={d.id} dispute={d} now={now} />
           ))}
         </div>
       )}
-      <details className="rounded-3xl bg-slate-50 p-5">
-        <summary className="cursor-pointer select-none text-sm font-medium text-slate-600">
-          Demo clock (for judges): skip ahead to see reminders
+      <details>
+        <summary className="cursor-pointer select-none list-none text-sm text-slate-400 underline underline-offset-4">
+          Demo clock
         </summary>
         <div className="mt-4">
           <DemoClock />

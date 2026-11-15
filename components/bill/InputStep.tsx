@@ -20,16 +20,13 @@ export const MAX_TEXT = 40000;
 function Progress({ onCancel }: { onCancel: () => void }) {
   const [sec, setSec] = useState(0);
   useEffect(() => {
-    const t = setInterval(() => setSec((s) => s + 1), 1000);
+    const t = setInterval(() => setSec((x) => x + 1), 1000);
     return () => clearInterval(t);
   }, []);
-  const msg = PROGRESS[Math.min(PROGRESS.length - 1, Math.floor(sec / 5))];
   return (
-    <div role="status" aria-live="polite" className="flex flex-col items-center gap-3 py-6 text-center">
-      <span className="h-8 w-8 animate-spin rounded-full border-[3px] border-emerald-600 border-t-transparent" aria-hidden />
-      <p className="text-lg font-medium text-slate-900">{msg}</p>
-      <p className="text-sm text-slate-500">Usually under a minute.</p>
-      <button type="button" onClick={onCancel} className="text-sm text-slate-500 underline-offset-4 hover:underline">
+    <div role="status" aria-live="polite" className="space-y-3 py-6 text-center">
+      <p className="text-lg text-slate-900">Reading your bill… {sec}s</p>
+      <button type="button" onClick={onCancel} className="text-sm text-slate-500 underline underline-offset-4">
         Cancel
       </button>
     </div>
@@ -65,30 +62,21 @@ function UploadZone({
   };
 
   return (
-    <div className="space-y-3">
+    <div
+      className="space-y-3 text-center"
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => {
+        e.preventDefault();
+        if (!disabled) void add(e.dataTransfer.files);
+      }}
+    >
       <label
         htmlFor="bill-files"
-        onDragOver={(e) => {
-          e.preventDefault();
-          setDrag(true);
-        }}
-        onDragLeave={() => setDrag(false)}
-        onDrop={(e) => {
-          e.preventDefault();
-          setDrag(false);
-          if (!disabled) void add(e.dataTransfer.files);
-        }}
-        className={`flex cursor-pointer flex-col items-center gap-3 rounded-3xl px-6 py-10 text-center transition sm:py-14 ${
-          drag ? "bg-emerald-50 ring-2 ring-emerald-500" : "bg-slate-50 hover:bg-slate-100"
-        } ${disabled || busy ? "pointer-events-none opacity-60" : ""}`}
+        className={`inline-flex w-full cursor-pointer items-center justify-center rounded-full bg-slate-900 px-7 py-4 text-base font-medium text-white hover:bg-slate-700 sm:w-auto ${
+          disabled || busy ? "pointer-events-none opacity-50" : ""
+        }`}
       >
-        <span aria-hidden className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-2xl shadow-sm">
-          ↑
-        </span>
-        <span className="text-lg font-semibold text-slate-900">
-          {busy ? "Preparing…" : files.length ? "Add more pages" : "Upload your bill"}
-        </span>
-        <span className="text-sm text-slate-500">PDF or photos of each page · up to {MAX_UPLOAD_FILES} pages</span>
+        {busy ? "Preparing…" : files.length ? "Add more pages" : "Upload your bill"}
         <input
           ref={inputRef}
           id="bill-files"
@@ -100,26 +88,25 @@ function UploadZone({
           onChange={(e) => void add(e.target.files)}
         />
       </label>
+      <p className="text-sm text-slate-400">PDF or photo, up to {MAX_UPLOAD_FILES} pages</p>
       {error ? (
-        <p role="alert" className="text-center text-sm text-rose-600">
+        <p role="alert" className="text-sm text-rose-600">
           {error}
         </p>
       ) : null}
       {files.length ? (
-        <ul className="space-y-2">
+        <ul className="space-y-1 text-sm text-slate-600">
           {files.map((f, i) => (
-            <li key={`${f.name}-${i}`} className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm">
-              <span className="min-w-0 truncate text-slate-800">
-                {f.mediaType === "application/pdf" ? "📄" : "🖼️"} {f.name}
-              </span>
+            <li key={`${f.name}-${i}`}>
+              {f.name}{" "}
               <button
                 type="button"
-                className="shrink-0 text-slate-400 hover:text-rose-600"
+                className="text-slate-400 underline underline-offset-4"
                 aria-label={`Remove ${f.name}`}
                 disabled={disabled}
                 onClick={() => onFiles(files.filter((_, j) => j !== i))}
               >
-                ✕
+                remove
               </button>
             </li>
           ))}
@@ -163,100 +150,62 @@ export function InputStep({
   const ready = files.length > 0 || (text.trim().length > 0 && !tooLong);
 
   return (
-    <div className="space-y-24 sm:space-y-32">
-      {/* First screen: the problem, the upload, a sample. */}
-      <section id="check-form" className="mx-auto max-w-2xl scroll-mt-24 space-y-8 pt-2 sm:pt-8">
-        <div className="space-y-4 text-center">
-          <h1 className="text-balance text-[2.5rem] font-semibold leading-[1.05] tracking-tight text-slate-900 sm:text-6xl">
-            Hospital bills are often wrong.
-          </h1>
-          <p className="text-balance text-lg text-slate-500 sm:text-xl">
-            Upload your bill. See what you shouldn&apos;t pay.
-          </p>
-        </div>
+    <section id="check-form" className="mx-auto max-w-xl scroll-mt-24 space-y-10 pt-6 text-center sm:pt-16">
+      <h1 className="text-balance text-4xl font-semibold tracking-tight text-slate-900 sm:text-6xl">
+        Is your hospital bill wrong?
+      </h1>
 
-        {loading ? (
-          <Progress onCancel={onCancel} />
-        ) : (
-          <>
-            {error ? (
-              <p role="alert" className="rounded-2xl bg-rose-50 px-5 py-4 text-center text-rose-700">
-                {error}
-              </p>
-            ) : null}
-            <UploadZone files={files} disabled={loading} onFiles={onFiles} />
+      {loading ? (
+        <Progress onCancel={onCancel} />
+      ) : (
+        <div className="space-y-6">
+          {error ? (
+            <p role="alert" className="text-rose-600">
+              {error}
+            </p>
+          ) : null}
+          <UploadZone files={files} disabled={loading} onFiles={onFiles} />
 
-            {pasteOpen && files.length === 0 ? (
-              <div className="space-y-2">
-                <label htmlFor="bill-text" className="text-sm font-medium text-slate-700">
-                  Paste the text of your bill
-                </label>
-                <textarea
-                  id="bill-text"
-                  rows={7}
-                  className={`${inputClass} font-mono text-sm`}
-                  placeholder={"03/14/2026  70450  CT head  1  $1,980.00\n…"}
-                  value={text}
-                  onChange={(e) => onText(e.target.value)}
-                />
-                {tooLong ? (
-                  <p className="text-sm text-rose-600">
-                    That&apos;s too long. Please paste only the list of charges (max {MAX_TEXT.toLocaleString()} characters).
-                  </p>
-                ) : null}
-              </div>
-            ) : null}
-
-            <div className="flex flex-col items-center gap-4">
-              {ready ? (
-                <Button size="lg" data-tour="check" onClick={onSubmit} className="w-full sm:w-auto">
-                  Check my bill
-                </Button>
-              ) : (
-                <Button
-                  size="lg"
-                  variant="secondary"
-                  data-tour="sample-A"
-                  onClick={() => onTrySample("A")}
-                  className="w-full sm:w-auto"
-                >
-                  Try a sample bill
-                </Button>
-              )}
-              <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-slate-500">
-                {files.length === 0 && !pasteOpen ? (
-                  <button type="button" className="underline-offset-4 hover:text-slate-900 hover:underline" onClick={() => setPasteOpen(true)}>
-                    Paste text instead
-                  </button>
-                ) : null}
-                {ready ? (
-                  <button
-                    type="button"
-                    data-tour="sample-A"
-                    className="underline-offset-4 hover:text-slate-900 hover:underline"
-                    onClick={() => onTrySample("A")}
-                  >
-                    Try a sample bill
-                  </button>
-                ) : null}
-              </div>
+          {pasteOpen && files.length === 0 ? (
+            <div className="space-y-2 text-left">
+              <label htmlFor="bill-text" className="sr-only">
+                Bill text
+              </label>
+              <textarea
+                id="bill-text"
+                rows={6}
+                className={`${inputClass} font-mono text-sm`}
+                placeholder="Paste the bill text"
+                value={text}
+                onChange={(e) => onText(e.target.value)}
+              />
+              {tooLong ? <p className="text-sm text-rose-600">Too long. Paste only the charges.</p> : null}
             </div>
-          </>
-        )}
-      </section>
+          ) : null}
 
-      {/* Below the first screen. */}
-      <Landing onTour={loading ? undefined : onTour} onSampleB={() => onTrySample("B")} />
+          {ready ? (
+            <Button size="lg" data-tour="check" onClick={onSubmit} className="w-full sm:w-auto">
+              Check my bill
+            </Button>
+          ) : null}
 
-      <section className="mx-auto max-w-2xl space-y-6">
-        <SummaryBillRequest />
-        <p className="text-center text-sm text-slate-500">
-          No file and no text?{" "}
-          <button type="button" className="font-medium text-slate-900 underline-offset-4 hover:underline" onClick={onManual}>
-            Type the charges yourself
-          </button>
-        </p>
-      </section>
-    </div>
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm">
+            <button
+              type="button"
+              data-tour="sample-A"
+              className="font-medium text-slate-900 underline underline-offset-4"
+              onClick={() => onTrySample("A")}
+            >
+              Try a sample bill
+            </button>
+            {files.length === 0 && !pasteOpen ? (
+              <button type="button" className="text-slate-400 underline underline-offset-4" onClick={() => setPasteOpen(true)}>
+                Paste text
+              </button>
+            ) : null}
+          </div>
+        </div>
+      )}
+    </section>
   );
 }

@@ -48,26 +48,15 @@ export function FindingOutcomeStats({ hospital, cpt, stats }: Props) {
   const s = stats ?? (cpt ? fetched?.get(cpt.trim().toUpperCase()) : undefined);
   if (!s || s.count <= 0) return null;
 
-  const people = s.count === 1 ? "1 person" : `${s.count} people`;
+  const lowered = Math.round((s.reducedCount / s.count) * 100);
   return (
-    <p className="mt-3 text-sm leading-relaxed text-emerald-800">
-      <span aria-hidden className="mr-1.5">●</span>
-      {people} at this hospital disputed this charge
-      {s.reducedCount > 0 ? (
-        <>
-          {" "}
-          · {s.reducedCount} got it lowered, usually by{" "}
-          <strong className="font-semibold">{Math.round(s.medianReductionPct)}%</strong>
-          {s.topArgument ? <> (most often for: {argumentLabel(s.topArgument)})</> : null}
-        </>
-      ) : (
-        <> · no one got it lowered yet</>
-      )}
-      {s.demoCount > 0 ? (
-        <span className="ml-1.5 text-slate-400" title={`${s.demoCount} of ${s.count} outcomes are demo data`}>
-          (includes demo data)
-        </span>
-      ) : null}
+    <p
+      className="text-sm text-slate-400"
+      title={`${s.reducedCount} of ${s.count} got it lowered, median cut ${Math.round(s.medianReductionPct)}%${
+        s.topArgument ? `, most often for: ${argumentLabel(s.topArgument)}` : ""
+      }${s.demoCount > 0 ? `. Includes ${s.demoCount} demo results.` : ""}`}
+    >
+      {s.count} disputed here · {lowered}% lowered{s.demoCount > 0 ? " · demo" : ""}
     </p>
   );
 }

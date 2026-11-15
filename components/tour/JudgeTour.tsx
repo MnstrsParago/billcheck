@@ -55,12 +55,6 @@ async function waitFor(sel: string, timeoutMs = 15_000): Promise<HTMLElement> {
 
 function scrollTo(el: HTMLElement | null) {
   el?.scrollIntoView({ behavior: "smooth", block: "start" });
-  if (el) {
-    el.animate(
-      [{ boxShadow: "0 0 0 0 rgba(16,185,129,0)" }, { boxShadow: "0 0 0 6px rgba(16,185,129,.45)" }, { boxShadow: "0 0 0 0 rgba(16,185,129,0)" }],
-      { duration: 1400, iterations: 2 },
-    );
-  }
 }
 
 function latestDisputeId(): string | null {
@@ -121,9 +115,9 @@ type Step = {
 
 const STEPS: Step[] = [
   {
-    title: "Let's check a sample ER bill",
-    body: "The AI reads a sample bill, like it would read yours.",
-    cta: "Load the sample bill",
+    title: "Load a sample ER bill.",
+    body: "",
+    cta: "Load sample",
     run: async ({ push }) => {
       if (location.pathname !== "/") push("/");
       const first = await waitFor('[data-tour="sample-A"], [data-tour="new-bill"], [data-tour="run-audit"]');
@@ -135,23 +129,21 @@ const STEPS: Step[] = [
     },
   },
   {
-    title: (f) => (f.rows ? `The AI found ${f.rows} charges` : "Here are the charges"),
-    body: "You can fix any charge before we check it.",
-    cta: "Check the bill",
+    title: (f) => (f.rows ? `AI found ${f.rows} charges.` : "Here are the charges."),
+    body: "",
+    cta: "Check bill",
     run: async () => {
       (await waitFor('[data-tour="run-audit"]')).click();
       scrollTo(await waitFor('[data-tour="findings"]'));
     },
   },
   {
-    title: (f) => (f.total !== null ? `${money(f.total)} you can dispute` : "Here is what we found"),
-    body: (f) =>
-      f.dup
-        ? `The same ${item(f.dup)} was billed twice: ${money(f.dup.disputeAmount)} you shouldn't pay.`
-        : f.over && f.over.multiple
-          ? `${item(f.over)} costs ${f.over.multiple.toFixed(1)}× what Medicare pays.`
-          : "We checked every charge against Medicare prices.",
-    cta: "See how to fix it",
+    title: (f) =>
+      f.total === null
+        ? "Here is what we found."
+        : `${money(f.total)} to dispute.${f.dup ? ` ${item(f.dup)} billed twice.` : ""}`,
+    body: "",
+    cta: "Get letter",
     run: async () => {
       $('[data-tour="get-letter"]')?.click();
       (await waitFor('[data-tour="upgrade"], [data-tour="dispute-letter"]')).dataset.tour === "upgrade" &&
@@ -160,9 +152,9 @@ const STEPS: Step[] = [
     },
   },
   {
-    title: "Your letter is ready",
-    body: (f) => `A letter to ${f.provider} with all ${f.count} problems (demo unlock, no charge).`,
-    cta: "Start the dispute",
+    title: "Your letter is ready.",
+    body: "",
+    cta: "Start dispute",
     run: async ({ setDisputeId }) => {
       resetClock();
       (await waitFor('[data-tour="start-dispute"]')).click();
@@ -173,19 +165,22 @@ const STEPS: Step[] = [
     },
   },
   {
-    title: "We tell you what to do next",
-    body: "We remind you on day 30 and day 60.",
-    cta: "Skip ahead 30 days",
+    title: "We remind you on day 30.",
+    body: "",
+    cta: "Skip 30 days",
     run: async ({ disputeId }) => {
       (await waitFor('[data-tour="simulate"]')).click();
-      const sel = disputeId ? `[data-dispute-id="${disputeId}"] [data-tour="tracker-letter"]` : '[data-tour="tracker-letter"]';
+      const scope = disputeId ? `[data-dispute-id="${disputeId}"] ` : "";
+      if (!$(`${scope}[data-tour="show-letter"]`)) (await waitFor(`${scope}[data-tour="more"]`)).click();
+      (await waitFor(`${scope}[data-tour="show-letter"]`)).click();
+      const sel = `${scope}[data-tour="tracker-letter"]`;
       scrollTo(await waitFor(sel));
     },
   },
   {
-    title: "30 days later: time to follow up",
-    body: (f) => `No answer from ${f.provider}, so the follow-up letter is ready.`,
-    cta: "Record the result",
+    title: "Day 30: follow-up letter ready.",
+    body: "",
+    cta: "Record result",
     run: async ({ disputeId }) => {
       const scope = disputeId ? `[data-dispute-id="${disputeId}"] ` : "";
       (await waitFor(`${scope}[data-tour="resolve"]`)).click();
@@ -193,25 +188,25 @@ const STEPS: Step[] = [
     },
   },
   {
-    title: "What did the hospital agree to?",
-    body: "Type the new prices, then press “Save as resolved”.",
+    title: "Enter new prices, then press Save.",
+    body: "",
     done: ({ disputeId }) => {
       const d = disputeId ? listDisputes().find((x) => x.id === disputeId) : null;
       return d?.status === "resolved" || d?.status === "escalated";
     },
   },
   {
-    title: (f) => (f.saved !== null ? `You saved ${money(f.saved)}` : "Every result helps the next patient"),
-    body: "Your result joins the hospital ratings, anonymously.",
-    cta: "See the hospital list",
+    title: (f) => (f.saved !== null ? `You saved ${money(f.saved)}. Added to ratings.` : "Added to hospital ratings."),
+    body: "",
+    cta: "See ratings",
     run: async ({ push }) => {
       push("/hospitals");
       await waitFor("table, ol, [data-leaderboard]", 15_000).catch(() => null);
     },
   },
   {
-    title: "That's BillCheck",
-    body: "Find errors, send the letter, follow up until fixed.",
+    title: "Done. That's BillCheck.",
+    body: "",
     cta: "Done",
   },
 ];
@@ -292,20 +287,17 @@ export function JudgeTour() {
       aria-label="Judge tour"
       className="fixed inset-x-0 bottom-0 z-50 px-3 pb-3 sm:px-4 sm:pb-4"
     >
-      <div className="mx-auto max-w-xl rounded-3xl bg-white p-5 shadow-2xl ring-1 ring-black/5">
+      <div className="mx-auto max-w-xl rounded-2xl border border-slate-200 bg-white p-5">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
-            Judge tour · step {state.step + 1} of {STEPS.length}
+          <p className="text-xs tabular-nums text-slate-400">
+            Tour {state.step + 1}/{STEPS.length}
           </p>
-          <button type="button" onClick={() => update(null)} className="text-xs text-slate-500 hover:text-slate-900">
-            Exit tour
+          <button type="button" onClick={() => update(null)} className="text-xs text-slate-400 underline underline-offset-4">
+            Exit
           </button>
         </div>
-        <div className="mt-1 h-1 w-full overflow-hidden rounded bg-slate-100">
-          <div className="h-full bg-emerald-500 transition-all" style={{ width: `${((state.step + 1) / STEPS.length) * 100}%` }} />
-        </div>
-        <h2 className="mt-2 text-lg font-semibold text-slate-900">{show(step.title, facts)}</h2>
-        <p className="mt-1 text-[15px] text-slate-600">{show(step.body, facts)}</p>
+        <h2 className="mt-1 text-lg font-medium text-slate-900">{show(step.title, facts)}</h2>
+        {show(step.body, facts) ? <p className="mt-1 text-[15px] text-slate-600">{show(step.body, facts)}</p> : null}
         {error ? <p className="mt-2 text-sm text-rose-600">{error}</p> : null}
         <div className="mt-3 flex items-center gap-3">
           {step.cta ? (
@@ -313,12 +305,12 @@ export function JudgeTour() {
               type="button"
               disabled={busy}
               onClick={() => void next()}
-              className="rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+              className="rounded-full bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-60"
             >
               {busy ? (state.step === 0 ? "Reading the bill…" : "Working…") : step.cta}
             </button>
           ) : (
-            <p className="text-sm text-emerald-800">Waiting for you to save…</p>
+            <p className="text-sm text-slate-400">Waiting…</p>
           )}
         </div>
       </div>

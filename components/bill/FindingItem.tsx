@@ -30,14 +30,18 @@ function shortName(f: Finding): string {
 
 /** One short sentence built from the finding's numbers. */
 function plainExplanation(f: Finding): string {
-  if (f.type === "duplicate") return "Same code, same day, same price — ask the hospital to remove the copy.";
+  if (f.type === "duplicate") return "Same code, date and price as another line.";
   if (f.medicareRate === undefined) return f.explanation;
   const units = f.units > 0 ? f.units : 1;
-  const k = f.referenceKind === "opps" ? OPPS_MULTIPLIER : MEDICARE_MULTIPLIER;
   return `${formatUSD(f.charge / units)} vs. Medicare ${formatUSD(f.medicareRate)}${
     f.multiple !== undefined ? ` (${f.multiple.toFixed(1)}×)` : ""
-  }; we count only the part above ${k}×.`;
+  }.`;
 }
+
+const SOURCE_URL = {
+  pfs: "https://www.cms.gov/medicare/payment/fee-schedules/physician",
+  opps: "https://www.cms.gov/medicare/payment/prospective-payment-systems/hospital-outpatient-pps/quarterly-addenda-updates/october-2026-addendum-b",
+} as const;
 
 export function FindingItem({
   finding: f,
@@ -45,7 +49,6 @@ export function FindingItem({
   pro,
   hospital,
   stats,
-  duplicateOf,
   onUnlock,
 }: {
   finding: Finding;
@@ -56,42 +59,37 @@ export function FindingItem({
   duplicateOf?: string;
   onUnlock: () => void;
 }) {
-  const dot = f.type === "duplicate" ? "bg-rose-500" : "bg-amber-500";
+  const url = f.type === "above_medicare" ? SOURCE_URL[f.referenceKind ?? "pfs"] : null;
   return (
-    <li aria-label={`Problem ${index + 1}: ${plainTitle(f)}`}>
-      <details className="group rounded-2xl bg-slate-50 open:bg-slate-100/70">
-        <summary className="flex cursor-pointer select-none list-none items-center justify-between gap-2 px-3.5 py-3.5 sm:gap-3 sm:px-5">
-          <span className="flex min-w-0 items-center gap-2.5">
-            <span aria-hidden className={`h-2 w-2 shrink-0 rounded-full ${dot}`} />
-            <span className="truncate text-[15px] text-slate-900 sm:text-base">
-              <span className="font-semibold">{plainTitle(f)}:</span> {shortName(f)}
-            </span>
+    <li aria-label={`Problem ${index + 1}: ${plainTitle(f)}`} className="py-3">
+      <details className="group">
+        <summary className="flex cursor-pointer select-none list-none items-baseline justify-between gap-3">
+          <span className="min-w-0 truncate text-base text-slate-900">
+            {plainTitle(f)} · {shortName(f)}
           </span>
-          <span className="flex shrink-0 items-center gap-2">
-            <span className="text-base font-semibold tabular-nums text-emerald-700 sm:text-lg">{usd0(f.disputeAmount)}</span>
-            <span aria-hidden className="text-slate-400 transition group-open:rotate-90">›</span>
-          </span>
+          <span className="shrink-0 text-base font-semibold tabular-nums text-slate-900">{usd0(f.disputeAmount)}</span>
         </summary>
-        <div className="space-y-2 px-4 pb-4 text-sm text-slate-600 sm:px-5">
-          <p>
-            {f.description} · {formatUSD(f.charge)}
-            {f.dateOfService ? ` · ${prettyDate(f.dateOfService)}` : ""}
-            {f.cpt ? ` · code ${f.cpt}` : ""}
-          </p>
-          <FindingOutcomeStats hospital={hospital || null} cpt={f.cpt} stats={stats} />
+        <p className="mt-1 text-sm text-slate-600">
           {pro ? (
             <>
-              <p className="text-base text-slate-800">{plainExplanation(f)}</p>
-              {duplicateOf ? <p>Same as: {duplicateOf}</p> : null}
-              <p className="text-xs text-slate-400">Source: {f.source}.</p>
+              {plainExplanation(f)}
+              {url ? (
+                <>
+                  {" "}
+                  <a href={url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">
+                    Source
+                  </a>
+                </>
+              ) : null}
             </>
           ) : (
-            <button type="button" onClick={onUnlock} className="font-medium text-emerald-700 hover:text-emerald-800">
-              <span aria-hidden>🔒 </span>See why with Pro
+            <button type="button" onClick={onUnlock} className="underline underline-offset-4">
+              See why (Pro)
             </button>
           )}
-        </div>
+        </p>
       </details>
+      <FindingOutcomeStats hospital={hospital || null} cpt={f.cpt} stats={stats} />
     </li>
   );
 }

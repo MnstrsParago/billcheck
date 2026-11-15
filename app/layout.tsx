@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
-import { ProBadge } from "@/components/ui/ProBadge";
 import { JudgeTour } from "@/components/tour/JudgeTour";
 import { TourLink } from "@/components/tour/TourLink";
 import { NavLinks } from "@/components/ui/NavLinks";
@@ -18,7 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className="min-h-screen bg-white text-slate-900 antialiased">
-        <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-xl">
+        <header className="sticky top-0 z-20 bg-white">
           <nav
             aria-label="Main"
             className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-3 sm:flex-nowrap sm:px-5 sm:py-3.5"
@@ -27,9 +26,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/" className="text-lg font-semibold tracking-tight">
                 Bill<span className="text-emerald-600">Check</span>
               </Link>
-              <span className="hidden sm:inline-flex">
-                <ProBadge />
-              </span>
             </div>
             <div className="sm:order-last">
               <TourLink />
@@ -37,10 +33,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <NavLinks />
           </nav>
         </header>
-        <main className="mx-auto max-w-5xl px-5 py-6 sm:py-12">{children}</main>
+        <main className="mx-auto max-w-3xl px-5 py-10 sm:py-20">{children}</main>
         <JudgeTour />
-        <footer className="mx-auto max-w-5xl px-5 pb-12 pt-6 text-xs text-slate-400">
-          BillCheck is not legal or medical advice. Prices: CMS Medicare 2026. Income limits: HHS 2026.
+        <footer className="mx-auto max-w-3xl px-5 pb-12 pt-10 text-xs text-slate-400">
+          Not legal or medical advice. Prices are Medicare 2026 references, not guarantees.
         </footer>
       </body>
     </html>

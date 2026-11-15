@@ -67,37 +67,23 @@ export function LinesStep({
         <Button variant="ghost" size="sm" className="-ml-3.5" data-tour="back" onClick={onBack}>
           ← Back
         </Button>
-        <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 sm:text-5xl">Check the charges we found</h1>
-        <p className="mt-3 text-lg text-slate-600">Fix anything wrong, then check.</p>
+        <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 sm:text-5xl">Your charges</h1>
       </div>
 
       {extractError && (
-        <div role="alert" className="rounded-3xl bg-amber-50 p-5 text-base text-amber-900 sm:p-6">
-          <p className="font-semibold">We couldn&apos;t read your bill automatically.</p>
-          <p className="mt-1">{extractError}</p>
-
-        </div>
+        <p role="alert" className="text-base text-rose-600">
+          {extractError}
+        </p>
       )}
 
       {dropped.length > 0 && (
-        <div className="rounded-3xl bg-slate-50 p-5 text-base text-slate-700 sm:p-6">
-          <p className="font-semibold text-slate-900">
-            We couldn&apos;t read {dropped.length} line{dropped.length === 1 ? "" : "s"}, so we left{" "}
-            {dropped.length === 1 ? "it" : "them"} out.
-          </p>
-          <ul className="mt-2 space-y-1 text-sm text-slate-600">
-            {dropped.map((d) => (
-              <li key={d.index}>
-                Line {d.index + 1}: {d.reason}
-              </li>
-            ))}
-          </ul>
-          <p className="mt-2 text-sm text-slate-600">If they are real charges, add them below.</p>
-        </div>
+        <p className="text-sm text-slate-500" title={dropped.map((d) => `Line ${d.index + 1}: ${d.reason}`).join(" / ")}>
+          {dropped.length} unreadable line{dropped.length === 1 ? "" : "s"} left out.
+        </p>
       )}
 
       <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_14rem]">
-        <Field label="Hospital or doctor's office" htmlFor="provider" hint="We put this name in your letters.">
+        <Field label="Hospital" htmlFor="provider">
           <input
             id="provider"
             className={inputClass}

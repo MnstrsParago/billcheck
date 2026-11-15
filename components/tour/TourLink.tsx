@@ -8,7 +8,7 @@ export function TourLink() {
     <button
       type="button"
       onClick={() => window.dispatchEvent(new Event(TOUR_START_EVENT))}
-      className="whitespace-nowrap rounded-full bg-slate-900 px-2.5 py-1 text-[11px] font-medium text-white hover:bg-slate-700 sm:px-3 sm:text-xs"
+      className="whitespace-nowrap text-sm text-slate-500 underline underline-offset-4 hover:text-slate-900"
     >
       Judge? 60-sec tour
     </button>
