@@ -48,13 +48,13 @@ export function SummaryBillRequest() {
   };
 
   return (
-    <details className="group rounded-lg border border-slate-200 p-3" id="summary-bill">
-      <summary className="cursor-pointer select-none text-sm font-medium text-slate-700">
-        Only have a summary bill with no line items?
+    <details className="group rounded-3xl bg-slate-50 p-5 sm:p-7" id="summary-bill">
+      <summary className="cursor-pointer select-none text-base font-semibold text-slate-900">
+        Only have a short bill with no list of charges?
       </summary>
       <div className="mt-3 space-y-3">
         <p className="text-sm text-slate-600">
-          You have the right to ask for an itemized bill. Send this request, and we&apos;ll remind you to follow up after{" "}
+          You can ask the hospital for a full list of charges (an “itemized bill”). Send this letter, and we&apos;ll remind you to follow up after{" "}
           {ITEMIZED_FOLLOW_UP_DAY} days if it hasn&apos;t arrived.
         </p>
         <div className="grid gap-3 sm:grid-cols-2">

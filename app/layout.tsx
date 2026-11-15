@@ -22,7 +22,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/" className="text-lg font-semibold tracking-tight">
                 Bill<span className="text-emerald-600">Check</span>
               </Link>
-              <ProBadge />
+              <span className="hidden sm:inline-flex">
+                <ProBadge />
+              </span>
             </div>
             <div className="flex items-center gap-5 text-sm text-slate-500">
               <Link href="/" className="hover:text-slate-900">Check</Link>

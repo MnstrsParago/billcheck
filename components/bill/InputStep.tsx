@@ -164,10 +164,10 @@ export function InputStep({
       {/* First screen: the problem, the upload, a sample. */}
       <section id="check-form" className="mx-auto max-w-2xl scroll-mt-24 space-y-8 pt-2 sm:pt-8">
         <div className="space-y-4 text-center">
-          <h1 className="text-[2.5rem] font-semibold leading-[1.05] tracking-tight text-slate-900 sm:text-6xl">
+          <h1 className="text-balance text-[2.5rem] font-semibold leading-[1.05] tracking-tight text-slate-900 sm:text-6xl">
             Hospital bills are often wrong.
           </h1>
-          <p className="text-lg text-slate-500 sm:text-xl">
+          <p className="text-balance text-lg text-slate-500 sm:text-xl">
             Upload your itemized bill. In about a minute you&apos;ll see what you shouldn&apos;t pay — and how to get it
             fixed.
           </p>

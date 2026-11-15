@@ -8,7 +8,7 @@ export function ProBadge({ className = "" }: { className?: string }) {
   if (!pro) return null;
   return (
     <span
-      className={`inline-flex items-center rounded-full bg-emerald-600 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-white ${className}`}
+      className={`inline-flex shrink-0 items-center whitespace-nowrap rounded-full bg-emerald-600 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-white ${className}`}
       title="Pro features unlocked in demo mode. No real charge."
     >
       Pro (demo)

@@ -5,6 +5,13 @@ import { MEDICARE_MULTIPLIER, OPPS_MULTIPLIER } from "@/lib/audit/medicare";
 import type { CodeOutcomeStats, Finding } from "@/lib/types";
 import { FindingOutcomeStats } from "@/components/outcomes/FindingOutcomeStats";
 
+const prettyDate = (ymd: string) => {
+  const t = Date.parse(`${ymd}T00:00:00Z`);
+  return Number.isFinite(t)
+    ? new Date(t).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })
+    : ymd;
+};
+
 /** Whole dollars for the big amounts ("$5,943"). */
 const usd0 = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
 
@@ -79,7 +86,7 @@ export function FindingItem({
           <p className="mt-0.5 text-sm text-slate-500">
             Charged {formatUSD(f.charge)}
             {f.units > 1 ? ` for ${f.units} units` : ""}
-            {f.dateOfService ? ` on ${f.dateOfService}` : ""}
+            {f.dateOfService ? ` on ${prettyDate(f.dateOfService)}` : ""}
             {f.cpt ? ` · code ${f.cpt}` : ""}
           </p>
         </div>

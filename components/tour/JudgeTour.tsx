@@ -4,6 +4,9 @@ import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { resetClock } from "@/lib/tracker/clock";
 import { listDisputes } from "@/lib/tracker/store";
+import { formatUSD, runAudit } from "@/lib/audit";
+import { loadDraft } from "@/lib/state";
+import type { Finding } from "@/lib/types";
 
 /** Start the tour from anywhere: window.dispatchEvent(new Event(TOUR_START_EVENT)). */
 export const TOUR_START_EVENT = "bc:tour-start";
@@ -68,9 +71,48 @@ function latestDisputeId(): string | null {
 
 type Ctx = { push: (href: string) => void; disputeId: string | null; setDisputeId: (id: string | null) => void };
 
+/** Live numbers from the current audit, so every step talks about this bill — nothing is hardcoded. */
+type Facts = {
+  rows: number;
+  provider: string;
+  total: number | null;
+  count: number;
+  dup: Finding | null;
+  over: Finding | null;
+  saved: number | null;
+};
+
+function readFacts(disputeId: string | null): Facts {
+  const d = loadDraft();
+  const audit = d?.auditedLines ? runAudit(d.auditedLines, d.household) : null;
+  const findings = audit?.findings ?? [];
+  const dup = findings.find((f) => f.type === "duplicate") ?? null;
+  // A second example that is not the same item as the duplicate, so the two sentences don't repeat.
+  const prices = findings
+    .filter((f) => f.type === "above_medicare")
+    .sort((a, b) => (b.multiple ?? 0) - (a.multiple ?? 0));
+  const over = prices.find((f) => !dup || f.cpt !== dup.cpt) ?? prices[0] ?? null;
+  const dispute = disputeId ? listDisputes().find((x) => x.id === disputeId) : null;
+  return {
+    rows: d?.rows.length ?? 0,
+    provider: d?.provider?.trim() || "the hospital",
+    total: audit ? audit.totalDisputable : null,
+    count: findings.length,
+    dup,
+    over,
+    saved: dispute?.status === "resolved" ? (dispute.savedAmount ?? 0) : null,
+  };
+}
+
+const money = (n: number) => formatUSD(Math.round(n)).replace(/\.00$/, "");
+const item = (f: Finding) => f.description.replace(/,.*$/, "").trim() || `code ${f.cpt ?? ""}`;
+
+type Text = string | ((f: Facts) => string);
+const show = (t: Text, f: Facts) => (typeof t === "function" ? t(f) : t);
+
 type Step = {
-  title: string;
-  body: string;
+  title: Text;
+  body: Text;
   cta?: string;
   run?: (c: Ctx) => Promise<void>;
   /** Steps without a CTA advance when this returns true. */
@@ -79,9 +121,9 @@ type Step = {
 
 const STEPS: Step[] = [
   {
-    title: "A real ER bill",
-    body: "We load Sample A, an itemized ER bill, and Claude reads it live into structured lines. Nothing is hardcoded: upload or paste your own bill and you get your own result.",
-    cta: "Load Sample A and read it",
+    title: "Let's check a sample ER bill",
+    body: "We'll load a sample hospital bill. The AI reads it the same way it would read yours.",
+    cta: "Load the sample bill",
     run: async ({ push }) => {
       if (location.pathname !== "/") push("/");
       const first = await waitFor('[data-tour="sample-A"], [data-tour="new-bill"], [data-tour="run-audit"]');
@@ -93,26 +135,33 @@ const STEPS: Step[] = [
     },
   },
   {
-    title: "Review the lines",
-    body: "Every line, CPT code and charge, in an editable table — fix anything the AI misread. The checks that follow are our own deterministic code, not the AI.",
-    cta: "Run the audit",
+    title: (f) => (f.rows ? `The AI found ${f.rows} charges` : "Here are the charges"),
+    body: "This is every charge from the bill. You can fix anything before we check it.",
+    cta: "Check the bill",
     run: async () => {
       (await waitFor('[data-tour="run-audit"]')).click();
       scrollTo(await waitFor('[data-tour="findings"]'));
     },
   },
   {
-    title: "Findings",
-    body: "A possible duplicate and prices more than 3× the 2026 Medicare reference add up to the amount you can dispute. Under each finding: what other patients won disputing that code at this hospital, from the shared outcomes database.",
-    cta: "Unlock Pro (demo, no charge)",
+    title: (f) => (f.total !== null ? `${money(f.total)} you can dispute` : "Here is what we found"),
+    body: (f) =>
+      [
+        f.dup ? `The same ${item(f.dup)} was billed twice. That's ${money(f.dup.disputeAmount)} you shouldn't pay.` : "",
+        f.over && f.over.multiple ? `${item(f.over)} costs ${f.over.multiple.toFixed(1)}× what Medicare pays.` : "",
+      ]
+        .filter(Boolean)
+        .join(" ") || "We checked every charge against Medicare prices and looked for charges billed twice.",
+    cta: "See how to fix it",
     run: async () => {
       $('[data-tour="upgrade"]')?.click();
       scrollTo(await waitFor('[data-tour="dispute-letter"]'));
     },
   },
   {
-    title: "The dispute letter",
-    body: "Pro explains each finding with its rule and source, and writes a ready letter with CPT codes and amounts (Copy or Download .txt). The paywall is a demo unlock — no real charge.",
+    title: "Your letter is ready",
+    body: (f) =>
+      `BillCheck wrote a letter to ${f.provider} with all ${f.count} problems and amounts. Pro is free in this demo — no real charge.`,
     cta: "Start the dispute",
     run: async ({ setDisputeId }) => {
       resetClock();
@@ -124,9 +173,9 @@ const STEPS: Step[] = [
     },
   },
   {
-    title: "Dispute tracker",
-    body: "The letter is logged as sent. Pro tracks day 30 (follow-up) and day 60 (escalation), with calendar reminders (.ics). Let's jump ahead in time.",
-    cta: "Simulate +30 days",
+    title: "We tell you what to do next",
+    body: "Hospitals often don't answer. BillCheck reminds you when to follow up (day 30) and when to go further (day 60).",
+    cta: "Skip ahead 30 days",
     run: async ({ disputeId }) => {
       (await waitFor('[data-tour="simulate"]')).click();
       const sel = disputeId ? `[data-dispute-id="${disputeId}"] [data-tour="tracker-letter"]` : '[data-tour="tracker-letter"]';
@@ -134,9 +183,9 @@ const STEPS: Step[] = [
     },
   },
   {
-    title: "Follow-up due",
-    body: "Day 30: status moved to Follow-up due and the follow-up letter is ready to send. Now suppose the hospital agreed to lower the bill.",
-    cta: "Resolve the dispute",
+    title: "30 days later: time to follow up",
+    body: (f) => `No answer from ${f.provider} yet, so your follow-up letter is ready. Now let's say they lowered the bill.`,
+    cta: "Record the result",
     run: async ({ disputeId }) => {
       const scope = disputeId ? `[data-dispute-id="${disputeId}"] ` : "";
       (await waitFor(`${scope}[data-tour="resolve"]`)).click();
@@ -144,26 +193,26 @@ const STEPS: Step[] = [
     },
   },
   {
-    title: "Record the outcome",
-    body: "Type the price the hospital agreed to and press “Save as resolved”. The anonymous result — hospital, state, CPT, prices, winning argument — is added to the shared database.",
+    title: "What did the hospital agree to?",
+    body: "Type the new price for each charge, then press “Save as resolved”. Results from this tour are saved as demo data.",
     done: ({ disputeId }) => {
       const d = disputeId ? listDisputes().find((x) => x.id === disputeId) : null;
       return d?.status === "resolved" || d?.status === "escalated";
     },
   },
   {
-    title: "Hospital leaderboard",
-    body: "Every closed dispute feeds this ranking of how often each hospital lowers disputed charges, and the per-code stats shown to the next patient. Demo rows are labeled.",
-    cta: "Open the leaderboard",
+    title: (f) => (f.saved !== null ? `You saved ${money(f.saved)}` : "Every result helps the next patient"),
+    body: "Your result (no personal data) joins a shared list. It shows which hospitals lower bills most often.",
+    cta: "See the hospital list",
     run: async ({ push }) => {
       push("/hospitals");
       await waitFor("table, ol, [data-leaderboard]", 15_000).catch(() => null);
     },
   },
   {
-    title: "That's the whole loop",
-    body: "Bill → findings → letter → tracker → outcome → shared data that helps the next patient. Thanks for taking the tour!",
-    cta: "Finish",
+    title: "That's BillCheck",
+    body: "Find the errors, send the letter, follow up until it's fixed — and help the next patient do the same.",
+    cta: "Done",
   },
 ];
 
@@ -213,6 +262,7 @@ export function JudgeTour() {
   }, [state]);
 
   if (!state || !step) return null;
+  const facts = readFacts(state.disputeId);
 
   const next = async () => {
     setError(null);
@@ -242,7 +292,7 @@ export function JudgeTour() {
       aria-label="Judge tour"
       className="fixed inset-x-0 bottom-0 z-50 px-3 pb-3 sm:px-4 sm:pb-4"
     >
-      <div className="mx-auto max-w-xl rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl ring-1 ring-black/5">
+      <div className="mx-auto max-w-xl rounded-3xl bg-white p-5 shadow-2xl ring-1 ring-black/5">
         <div className="flex items-center justify-between gap-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
             Judge tour · step {state.step + 1} of {STEPS.length}
@@ -254,8 +304,8 @@ export function JudgeTour() {
         <div className="mt-1 h-1 w-full overflow-hidden rounded bg-slate-100">
           <div className="h-full bg-emerald-500 transition-all" style={{ width: `${((state.step + 1) / STEPS.length) * 100}%` }} />
         </div>
-        <h2 className="mt-2 font-semibold text-slate-900">{step.title}</h2>
-        <p className="mt-1 text-sm text-slate-600">{step.body}</p>
+        <h2 className="mt-2 text-lg font-semibold text-slate-900">{show(step.title, facts)}</h2>
+        <p className="mt-1 text-[15px] text-slate-600">{show(step.body, facts)}</p>
         {error ? <p className="mt-2 text-sm text-rose-600">{error}</p> : null}
         <div className="mt-3 flex items-center gap-3">
           {step.cta ? (
@@ -263,7 +313,7 @@ export function JudgeTour() {
               type="button"
               disabled={busy}
               onClick={() => void next()}
-              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+              className="rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
             >
               {busy ? (state.step === 0 ? "Reading the bill…" : "Working…") : step.cta}
             </button>

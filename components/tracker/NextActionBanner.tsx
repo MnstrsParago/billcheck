@@ -20,7 +20,7 @@ export function NextActionBanner() {
   return (
     <Link
       href="/tracker"
-      className="block rounded-xl border border-emerald-200 bg-emerald-50 p-4 transition hover:border-emerald-300 hover:bg-emerald-100/60"
+      className="block rounded-2xl bg-emerald-50 px-5 py-4 transition hover:bg-emerald-100/70"
     >
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
